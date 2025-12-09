@@ -4,12 +4,32 @@
 **Name**: Traveller (Travel Notebook)
 **Goal**: A collaborative travel itinerary and expense tracking application designed for groups.
 
+## 1.1 Directory Structure & Version Control
+> [!IMPORTANT]
+> **Project Root**: The root of the Git repository is the `Traveller2` folder itself.
+> **Constraint**: Do not restructure the top-level folders or move files out of `Traveller2`. All project files (package.json, vite.config.ts, etc.) must remain at the root of this structure.
+> **Deployment**: Vercel configuration (`vercel.json`) is maintained at the root to handle deployment specific settings (rewrites) while deferring to Vite for build logic.
+
 ## 2. Technology Stack
 
 ### Core
 -   **Framework**: React 18 + Vite
 -   **Language**: TypeScript
--   **Styling**: Tailwind CSS (with custom "Macaron" color palette)
+-   **Styling**: Tailwind CSS, utilizing a custom "Traveller" color palette based on design specs.
+    -   **Page Title**: `#342b14`
+    -   **Main Title**: `#5a4a42`
+    -   **Subtitle**: `#a39992`
+    -   **Description**: `#667280`
+    -   **Button**: `#d4c4b8`
+    -   **Date Unselected**: BG `#f5f0eb`, Text `#a39992`
+    -   **Date Selected**: BG `#ebe6e1`, Text `#5a4a42`
+    -   **Small Box BG**: `#faf8f5`
+    -   **Positive**: `#88b89e`
+    -   **Negative**: `#d8a4a4`
+    -   **Background**: `#faf8f5`
+    -   **Bottom Btn Unselected**: Text `#a39992`, BG `#ffffff`
+    -   **Bottom Btn Selected**: `#d4c4b8`
+    -   **Border/Line**: `#e8e3de`
 
 ### State & Data
 -   **Server State**: TanStack Query (React Query) v5

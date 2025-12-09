@@ -54,7 +54,7 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
                                 <input
                                     type="time"
                                     {...register('start_time', { required: true })}
-                                    className="w-full pl-10 pr-3 py-3 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-macaron-blue"
+                                    className="w-full pl-10 pr-3 py-3 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-btn"
                                 />
                             </div>
                         </div>
@@ -64,7 +64,7 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
                             <label className="text-xs font-bold text-gray-500 ml-1">類型</label>
                             <select
                                 {...register('category')}
-                                className="w-full h-[46px] px-3 py-3 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-macaron-blue appearance-none"
+                                className="w-full h-[46px] px-3 py-3 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-btn appearance-none"
                             >
                                 <option value="activity">景點 (Activity)</option>
                                 <option value="food">美食 (Food)</option>
@@ -83,7 +83,7 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
                                 type="text"
                                 placeholder="e.g. 東京鐵塔"
                                 {...register('location', { required: true })}
-                                className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-macaron-blue"
+                                className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-btn"
                             />
                         </div>
                     </div>
@@ -97,7 +97,7 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
                                 type="url"
                                 placeholder="https://maps.app.goo.gl/..."
                                 {...register('google_map_link')}
-                                className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-macaron-blue"
+                                className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-btn"
                             />
                         </div>
                     </div>
@@ -111,7 +111,7 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
                                 rows={3}
                                 placeholder="想吃什麼？要注意什麼？"
                                 {...register('notes')}
-                                className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-macaron-blue resize-none"
+                                className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-btn resize-none"
                             />
                         </div>
                     </div>

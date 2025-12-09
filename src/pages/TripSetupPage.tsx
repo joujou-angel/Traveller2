@@ -110,14 +110,14 @@ export default function TripSetupPage() {
     };
 
     return (
-        <div className="min-h-screen bg-cream flex flex-col justify-center items-center p-6 text-gray-800">
+        <div className="min-h-screen bg-page-bg flex flex-col justify-center items-center p-6 text-gray-800">
             <div className="max-w-md w-full animate-fade-in-up">
                 <header className="mb-8 text-center">
                     <div className="inline-flex items-center justify-center p-4 bg-white rounded-full shadow-sm mb-4">
-                        <Plane className="w-10 h-10 text-macaron-blue" />
+                        <Plane className="w-10 h-10 text-btn" />
                     </div>
                     <h1 className="text-3xl font-bold mb-2 tracking-tight">開始新旅程</h1>
-                    <p className="text-text-muted">設定你的航班與時間，自動生成行程表</p>
+                    <p className="text-desc">設定你的航班與時間，自動生成行程表</p>
                 </header>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
@@ -136,7 +136,7 @@ export default function TripSetupPage() {
                                 {...register("destination")}
                                 type="text"
                                 placeholder="例如：東京, 大阪"
-                                className="w-full pl-12 pr-4 py-4 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-macaron-blue focus:bg-white transition-all font-medium"
+                                className="w-full pl-12 pr-4 py-4 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-btn focus:bg-white transition-all font-medium"
                             />
                         </div>
                         {errors.destination && <p className="text-red-400 text-xs ml-1">{errors.destination.message}</p>}
@@ -150,7 +150,7 @@ export default function TripSetupPage() {
                                 <input
                                     {...register("startDate")}
                                     type="date"
-                                    className="w-full pl-4 pr-2 py-3 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-macaron-blue focus:bg-white transition-all text-sm font-medium"
+                                    className="w-full pl-4 pr-2 py-3 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-btn focus:bg-white transition-all text-sm font-medium"
                                 />
                             </div>
                             {errors.startDate && <p className="text-red-400 text-xs ml-1">{errors.startDate.message}</p>}
@@ -161,7 +161,7 @@ export default function TripSetupPage() {
                                 <input
                                     {...register("endDate")}
                                     type="date"
-                                    className="w-full pl-4 pr-2 py-3 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-macaron-blue focus:bg-white transition-all text-sm font-medium"
+                                    className="w-full pl-4 pr-2 py-3 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-btn focus:bg-white transition-all text-sm font-medium"
                                 />
                             </div>
                             {errors.endDate && <p className="text-red-400 text-xs ml-1">{errors.endDate.message}</p>}

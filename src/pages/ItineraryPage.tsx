@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useState, useMemo } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import DayView from '../features/itinerary/components/DayView';
 import ItineraryForm from '../features/itinerary/components/ItineraryForm';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -134,10 +134,10 @@ export default function ItineraryPage() {
     }
 
     return (
-        <div className="h-full flex flex-col bg-cream">
+        <div className="h-full flex flex-col bg-page-bg">
 
             {/* Sticky Header with Tabs */}
-            <div className="sticky top-0 bg-cream/95 backdrop-blur-sm z-10 border-b border-gray-100 shadow-sm">
+            <div className="sticky top-0 bg-page-bg/95 backdrop-blur-sm z-10 border-b border-gray-100 shadow-sm">
                 <div className="px-4 py-3 pb-0 overflow-x-auto hide-scrollbar flex gap-2 snap-x">
                     {days.map((day, idx) => (
                         <button
@@ -155,7 +155,7 @@ export default function ItineraryPage() {
 
                             {/* Active Indicator Line */}
                             {activeDayIndex === idx && (
-                                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-macaron-blue"></div>
+                                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-main-title"></div>
                             )}
                         </button>
                     ))}
@@ -163,7 +163,7 @@ export default function ItineraryPage() {
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 p-4 bg-white min-h-[calc(100vh-140px)]">
+            <div className="flex-1 p-4 bg-page-bg min-h-[calc(100vh-140px)]">
                 <DayView
                     tripId={tripId!} // Pass tripId
                     date={days[activeDayIndex].date}
@@ -171,6 +171,14 @@ export default function ItineraryPage() {
                     onEdit={handleEdit}
                 />
             </div>
+
+            {/* FAB */}
+            <button
+                onClick={handleAdd}
+                className="fixed bottom-24 right-6 w-14 h-14 bg-btn text-white rounded-full shadow-lg shadow-gray-200 flex items-center justify-center active:scale-90 transition-all hover:scale-105 z-40"
+            >
+                <Plus className="w-6 h-6" />
+            </button>
 
             {/* Form Modal */}
             {isFormOpen && (

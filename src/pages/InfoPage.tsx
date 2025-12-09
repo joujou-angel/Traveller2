@@ -212,7 +212,7 @@ const InfoPage = () => {
     if (isLoading) {
         return (
             <div className="h-full flex flex-col items-center justify-center p-8 text-gray-500">
-                <Loader2 className="w-8 h-8 animate-spin mb-2 text-macaron-blue" />
+                <Loader2 className="w-8 h-8 animate-spin mb-2 text-sub-title" />
             </div>
         );
     }
@@ -253,7 +253,7 @@ const InfoPage = () => {
                         {/* Destination */}
                         <div className="flex items-start gap-4">
                             <div className="p-3 bg-blue-50 rounded-2xl flex-shrink-0">
-                                <MapPin className="w-6 h-6 text-macaron-blue" />
+                                <MapPin className="w-6 h-6 text-sub-title" />
                             </div>
                             <div>
                                 <p className="text-xs text-gray-400 font-bold tracking-wider uppercase mb-1">DESTINATION</p>
@@ -264,7 +264,7 @@ const InfoPage = () => {
                         {/* Date */}
                         <div className="flex items-start gap-4">
                             <div className="p-3 bg-pink-50 rounded-2xl flex-shrink-0">
-                                <Calendar className="w-6 h-6 text-macaron-pink" />
+                                <Calendar className="w-6 h-6 text-sub-title" />
                             </div>
                             <div>
                                 <p className="text-xs text-gray-400 font-bold tracking-wider uppercase mb-1">DATES</p>
@@ -377,7 +377,7 @@ const InfoPage = () => {
                                     navigator.clipboard.writeText(link);
                                     toast.success('Link copied! Share it with friends');
                                 }}
-                                className="bg-macaron-blue/10 text-macaron-blue px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 hover:bg-macaron-blue/20 transition-colors"
+                                className="bg-btn/10 text-btn px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 hover:bg-btn/20 transition-colors"
                             >
                                 <Share2 className="w-3 h-3" />
                                 Invite

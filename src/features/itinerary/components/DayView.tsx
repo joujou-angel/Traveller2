@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../lib/supabase';
 import ItineraryItem from './ItineraryItem';
-import { Plus, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 interface DayViewProps {
     tripId: string; // Add tripId
@@ -55,13 +55,8 @@ export default function DayView({ tripId, date, onAdd, onEdit }: DayViewProps) {
         <div className="space-y-4 pb-24">
             {/* Header / Add Button */}
             <div className="flex justify-end">
-                <button
-                    onClick={onAdd}
-                    className="flex items-center gap-1 text-sm font-bold text-macaron-blue bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors"
-                >
-                    <Plus className="w-4 h-4" />
-                    <span>新增行程</span>
-                </button>
+                {/* Header / Add Button - Removed in favor of FAB */}
+                <div className="h-4"></div>
             </div>
 
             {/* List */}
@@ -82,7 +77,7 @@ export default function DayView({ tripId, date, onAdd, onEdit }: DayViewProps) {
                 ) : (
                     <div className="text-center py-12 border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/50">
                         <p className="text-gray-400 mb-2">這天還沒有行程</p>
-                        <button onClick={onAdd} className="text-macaron-blue font-bold hover:underline">
+                        <button onClick={onAdd} className="text-btn font-bold hover:underline">
                             點擊新增
                         </button>
                     </div>

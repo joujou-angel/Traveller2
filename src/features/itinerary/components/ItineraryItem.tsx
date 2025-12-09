@@ -18,7 +18,7 @@ const CategoryColors: Record<string, string> = {
     transport: 'bg-blue-50 text-blue-500 border-blue-100',
     food: 'bg-orange-50 text-orange-500 border-orange-100',
     stay: 'bg-indigo-50 text-indigo-500 border-indigo-100',
-    activity: 'bg-macaron-green/30 text-green-600 border-green-100',
+    activity: 'bg-positive/20 text-positive border-positive/30',
 };
 
 export default function ItineraryItem({ item, onEdit, onDelete }: ItineraryItemProps) {
@@ -33,7 +33,7 @@ export default function ItineraryItem({ item, onEdit, onDelete }: ItineraryItemP
     return (
         <div className="group relative pl-4 pb-8 border-l-2 border-gray-100 last:border-0 last:pb-0">
             {/* Timeline Dot */}
-            <div className={`absolute -left-[9px] top-0 w-4 h-4 rounded-full border-2 border-white shadow-sm ${item.category === 'transport' ? 'bg-macaron-blue' : 'bg-macaron-pink'}`}></div>
+            <div className={`absolute -left-[9px] top-0 w-4 h-4 rounded-full border-2 border-white shadow-sm ${item.category === 'transport' ? 'bg-btn' : 'bg-negative'}`}></div>
 
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all hover:shadow-md">
                 {/* Header (Always Visible) */}

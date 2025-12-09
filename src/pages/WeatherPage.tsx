@@ -62,7 +62,7 @@ export default function WeatherPage() {
     if (isLoading) {
         return (
             <div className="h-full flex flex-col items-center justify-center p-8 text-gray-500">
-                <Loader2 className="w-8 h-8 animate-spin mb-2 text-macaron-blue" />
+                <Loader2 className="w-8 h-8 animate-spin mb-2 text-sub-title" />
                 <p>正在載入天氣資訊...</p>
             </div>
         );
@@ -88,7 +88,7 @@ export default function WeatherPage() {
     return (
         <div className="p-6 pb-24 space-y-6">
             <header className="flex items-center space-x-2 mb-6">
-                <MapPin className="w-6 h-6 text-macaron-blue" />
+                <MapPin className="w-6 h-6 text-sub-title" />
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">{tripData?.destination}</h1>
                     <p className="text-sm text-gray-500">{geoData?.country} {geoData?.admin1}</p>
@@ -124,7 +124,7 @@ export default function WeatherPage() {
                         <div key={date} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between">
                             <div className="flex items-center space-x-4">
                                 <div className="bg-blue-50 p-3 rounded-2xl">
-                                    <Icon className="w-6 h-6 text-macaron-blue" />
+                                    <Icon className="w-6 h-6 text-sub-title" />
                                 </div>
                                 <div>
                                     <p className="font-bold text-gray-900">{dateStr}</p>

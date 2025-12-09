@@ -134,7 +134,7 @@ const TripListPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-24">
+        <div className="min-h-screen bg-page-bg pb-24">
             {/* Header */}
             <div className="bg-white px-6 pt-12 pb-6 shadow-sm sticky top-0 z-10">
                 <div className="flex justify-between items-center mb-2">
@@ -160,7 +160,7 @@ const TripListPage = () => {
 
                 {isLoading ? (
                     <div className="flex justify-center py-10">
-                        <Loader2 className="w-8 h-8 animate-spin text-macaron-blue" />
+                        <Loader2 className="w-8 h-8 animate-spin text-sub-title" />
                     </div>
                 ) : (
                     <div className="space-y-4">
@@ -168,12 +168,12 @@ const TripListPage = () => {
                             <div
                                 key={trip.id}
                                 onClick={() => navigate(`/trips/${trip.id}/itinerary`)}
-                                className="group bg-white rounded-3xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer border border-transparent hover:border-macaron-blue/30 active:scale-98 relative"
+                                className="group bg-white rounded-3xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer border border-transparent hover:border-btn/30 active:scale-98 relative"
                             >
                                 {/* Edit Button */}
                                 <button
                                     onClick={(e) => handleEditClick(e, trip)}
-                                    className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-macaron-blue hover:text-white text-gray-400"
+                                    className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-btn hover:text-white text-gray-400"
                                 >
                                     <Edit2 className="w-4 h-4" />
                                 </button>
@@ -195,7 +195,7 @@ const TripListPage = () => {
                                             {trip.location || 'No Location'}
                                         </div>
                                         {(trip.start_date && trip.end_date) && (
-                                            <div className="flex items-center gap-1.5 text-macaron-blue text-xs font-bold bg-macaron-blue/10 w-fit px-2 py-1 rounded-lg">
+                                            <div className="flex items-center gap-1.5 text-date-selected-text text-xs font-bold bg-date-selected-bg w-fit px-2 py-1 rounded-lg">
                                                 <Calendar className="w-3 h-3" />
                                                 {format(new Date(trip.start_date), 'MMM d')} - {format(new Date(trip.end_date), 'MMM d')}
                                             </div>
@@ -215,7 +215,7 @@ const TripListPage = () => {
             {/* FAB - Create Trip */}
             <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="fixed bottom-24 right-6 w-14 h-14 bg-gradient-to-tr from-macaron-blue to-purple-400 text-white rounded-full shadow-lg shadow-blue-200 flex items-center justify-center active:scale-90 transition-all hover:scale-105 z-40"
+                className="fixed bottom-24 right-6 w-14 h-14 bg-btn text-white rounded-full shadow-lg shadow-gray-200 flex items-center justify-center active:scale-90 transition-all hover:scale-105 z-40"
             >
                 <Plus className="w-6 h-6" />
             </button>
@@ -240,7 +240,7 @@ const TripListPage = () => {
                                     placeholder="e.g. Kyoto Summer Trip"
                                     value={newTripName}
                                     onChange={(e) => setNewTripName(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-macaron-blue focus:ring-2 focus:ring-macaron-blue/20 outline-none transition-all font-medium text-gray-800 placeholder:text-gray-400"
+                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-btn focus:ring-2 focus:ring-btn/20 outline-none transition-all font-medium text-gray-800 placeholder:text-gray-400"
                                     autoFocus
                                 />
                             </div>
@@ -277,7 +277,7 @@ const TripListPage = () => {
                                         type="text"
                                         value={editingTrip.name}
                                         onChange={(e) => setEditingTrip({ ...editingTrip, name: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-macaron-blue focus:ring-2 focus:ring-macaron-blue/20 outline-none transition-all font-medium text-gray-800"
+                                        className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-btn focus:ring-2 focus:ring-btn/20 outline-none transition-all font-medium text-gray-800"
                                     />
                                 </div>
                                 <div>
@@ -286,7 +286,7 @@ const TripListPage = () => {
                                         type="text"
                                         value={editingTrip.cover_image}
                                         onChange={(e) => setEditingTrip({ ...editingTrip, cover_image: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-macaron-blue focus:ring-2 focus:ring-macaron-blue/20 outline-none transition-all font-medium text-gray-800 text-sm"
+                                        className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-btn focus:ring-2 focus:ring-btn/20 outline-none transition-all font-medium text-gray-800 text-sm"
                                     />
                                     {editingTrip.cover_image && (
                                         <div className="mt-2 h-32 rounded-xl overflow-hidden bg-gray-100">

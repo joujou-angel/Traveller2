@@ -182,7 +182,7 @@ const ExpensesPage = () => {
     if (isLoading) {
         return (
             <div className="h-full flex flex-col items-center justify-center p-8 text-gray-500">
-                <Loader2 className="w-8 h-8 animate-spin mb-2 text-macaron-pink" />
+                <Loader2 className="w-8 h-8 animate-spin mb-2 text-sub-title" />
             </div>
         );
     }
@@ -199,9 +199,9 @@ const ExpensesPage = () => {
                 </div>
 
                 {/* Always Visible Compact Converter */}
-                <div className="bg-white rounded-2xl p-3 shadow-sm border border-macaron-yellow/30 space-y-2">
+                <div className="bg-white rounded-2xl p-3 shadow-sm border border-line space-y-2">
                     <div className="flex items-center gap-2">
-                        <div className="bg-macaron-yellow/10 p-2 rounded-xl text-macaron-yellow flex-shrink-0">
+                        <div className="bg-date-selected-bg p-2 rounded-xl text-main-title flex-shrink-0">
                             <Calculator className="w-4 h-4" />
                         </div>
                         <input
@@ -209,7 +209,7 @@ const ExpensesPage = () => {
                             value={convAmount}
                             onChange={(e) => setConvAmount(e.target.value)}
                             placeholder="Amount"
-                            className="flex-1 w-full min-w-[80px] p-2 bg-gray-50 rounded-lg font-bold text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-macaron-yellow text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="flex-1 w-full min-w-[80px] p-2 bg-gray-50 rounded-lg font-bold text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-btn text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                         <span className="text-gray-300 text-xs">x</span>
                         <input
@@ -217,13 +217,13 @@ const ExpensesPage = () => {
                             value={convRate}
                             onChange={(e) => setConvRate(e.target.value)}
                             placeholder="Rate"
-                            className="w-20 p-2 bg-gray-50 rounded-lg font-bold text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-macaron-yellow text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-20 p-2 bg-gray-50 rounded-lg font-bold text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-btn text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                     </div>
 
                     {/* Result Row */}
-                    <div className="bg-macaron-yellow/10 px-3 py-2 rounded-lg flex items-center">
-                        <span className="text-xs font-bold text-macaron-yellow mr-2">TWD</span>
+                    <div className="bg-date-selected-bg px-3 py-2 rounded-lg flex items-center">
+                        <span className="text-xs font-bold text-main-title mr-2">TWD</span>
                         <span className="font-bold text-gray-800 text-lg">${calculatedTwd.toLocaleString()}</span>
                     </div>
                 </div>
@@ -232,10 +232,10 @@ const ExpensesPage = () => {
             </header>
 
             {/* Balances Card - Lightened Multi-Currency */}
-            <div className="bg-gradient-to-br from-blue-100 to-purple-100 rounded-3xl p-6 shadow-sm text-gray-800 space-y-4 relative overflow-hidden transition-all hover:shadow-md border border-white/50">
+            <div className="bg-white rounded-3xl p-6 shadow-sm text-gray-800 space-y-4 relative overflow-hidden transition-all hover:shadow-md border border-line">
                 <div className="absolute top-0 right-0 w-48 h-48 bg-white/20 rounded-full -mr-12 -mt-12 pointer-events-none blur-2xl" />
                 <div className="flex items-center gap-2 mb-2">
-                    <Wallet className="w-5 h-5 text-macaron-yellow" />
+                    <Wallet className="w-5 h-5 text-main-title" />
                     <h3 className="font-bold tracking-wide text-gray-700">NET BALANCES</h3>
                 </div>
                 <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-white/40 to-transparent rounded-full -mr-12 -mt-12 pointer-events-none blur-2xl" />
@@ -256,7 +256,7 @@ const ExpensesPage = () => {
                                             <div key={curr} className="flex justify-between items-center mb-1 last:mb-0">
                                                 <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{curr}</span>
                                                 <div className="text-right">
-                                                    <span className={`text-sm font-bold ${isOwed ? 'text-green-600' : isDebt ? 'text-pink-500' : 'text-gray-400'}`}>
+                                                    <span className={`text-sm font-bold ${isOwed ? 'text-positive' : isDebt ? 'text-negative' : 'text-gray-400'}`}>
                                                         {bal > 0 ? '+' : ''}{bal.toLocaleString()}
                                                     </span>
                                                 </div>
@@ -302,7 +302,7 @@ const ExpensesPage = () => {
                             {items.map((expense: Expense) => (
                                 <div key={expense.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-between">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-full bg-macaron-blue/10 flex items-center justify-center text-macaron-blue">
+                                        <div className="w-10 h-10 rounded-full bg-btn/10 flex items-center justify-center text-btn">
                                             <Receipt className="w-5 h-5" />
                                         </div>
                                         <div>
@@ -339,7 +339,7 @@ const ExpensesPage = () => {
             {/* FAB */}
             <button
                 onClick={openModal}
-                className="fixed bottom-24 right-6 w-14 h-14 bg-gradient-to-tr from-macaron-blue to-purple-400 text-white rounded-full shadow-lg shadow-blue-200 flex items-center justify-center active:scale-90 transition-all hover:scale-105 z-40"
+                className="fixed bottom-24 right-6 w-14 h-14 bg-btn text-white rounded-full shadow-lg shadow-gray-200 flex items-center justify-center active:scale-90 transition-all hover:scale-105 z-40"
             >
                 <Plus className="w-6 h-6" />
             </button>
@@ -428,7 +428,7 @@ const ExpensesPage = () => {
                                                 }
                                             }}
                                             className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${involved.includes(c)
-                                                ? 'bg-macaron-blue text-white border-macaron-blue'
+                                                ? 'bg-btn text-white border-btn'
                                                 : 'bg-white text-gray-400 border-gray-200'
                                                 }`}
                                         >
@@ -442,7 +442,7 @@ const ExpensesPage = () => {
                                 <button
                                     onClick={() => addExpenseMutation.mutate()}
                                     disabled={addExpenseMutation.isPending || !amount || !itemName}
-                                    className="w-full py-4 bg-gradient-to-r from-macaron-pink to-rose-300 text-white rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-transform disabled:opacity-50 disabled:scale-100"
+                                    className="w-full py-4 bg-btn text-white rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-transform disabled:opacity-50 disabled:scale-100"
                                 >
                                     {addExpenseMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : 'Add Expense'}
                                 </button>

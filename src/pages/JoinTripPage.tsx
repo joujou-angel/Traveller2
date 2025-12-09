@@ -87,14 +87,14 @@ const JoinTripPage = () => {
     }, [tripId, user, loading, navigate]);
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
+        <div className="min-h-screen bg-page-bg flex flex-col items-center justify-center p-6 text-center">
             <div className="bg-white p-8 rounded-3xl shadow-xl max-w-sm w-full space-y-6">
 
                 {/* Status Icons */}
                 <div className="flex justify-center">
                     {(status === 'validating' || status === 'joining') && (
                         <div className="p-4 bg-blue-50 rounded-full animate-pulse">
-                            <Loader2 className="w-8 h-8 text-macaron-blue animate-spin" />
+                            <Loader2 className="w-8 h-8 text-sub-title animate-spin" />
                         </div>
                     )}
                     {status === 'success' && (
