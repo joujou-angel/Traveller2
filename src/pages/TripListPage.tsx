@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Plus, Calendar, MapPin, ChevronRight, LogOut, Edit2, X, Loader2 } from 'lucide-react';
+import { Plus, Calendar, MapPin, ChevronRight, LogOut, Edit2, X, Loader2, Trash2, Check, Save } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
@@ -41,6 +41,25 @@ const TripListPage = () => {
         enabled: !!user?.id
     });
 
+    const deleteTripMutation = useMutation({
+        mutationFn: async (tripId: string) => {
+            const { error } = await supabase
+                .from('trips')
+                .delete()
+                .eq('id', tripId);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['trips'] });
+            toast.success('Trip deleted successfully');
+            setIsEditModalOpen(false);
+        },
+        onError: (error) => {
+            toast.error('Failed to delete trip');
+            console.error(error);
+        }
+    });
+
     const updateTripMutation = useMutation({
         mutationFn: async (updatedTrip: { id: string, name: string, cover_image: string }) => {
             const { error } = await supabase
@@ -75,31 +94,55 @@ const TripListPage = () => {
         });
     };
 
+    const handleDelete = () => {
+        if (!editingTrip) return;
+        if (window.confirm('Are you sure you want to delete this trip? This action cannot be undone.')) {
+            deleteTripMutation.mutate(editingTrip.id);
+        }
+    };
+
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [newTripName, setNewTripName] = useState('');
+    const [destination, setDestination] = useState('');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
 
     const createTripMutation = useMutation({
-        mutationFn: async (name: string) => {
-            const { data, error } = await supabase
+        mutationFn: async (data: { name: string; destination: string; start: string; end: string }) => {
+            const { data: tripData, error } = await supabase
                 .from('trips')
                 .insert({
-                    name,
+                    name: data.name,
                     user_id: user?.id,
-                    start_date: new Date().toISOString(),
-                    end_date: new Date().toISOString(),
+                    start_date: data.start,
+                    end_date: data.end,
                     cover_image: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&q=80',
-                    location: 'TBD'
+                    location: data.destination
                 })
                 .select()
                 .single();
             if (error) throw error;
-            return data;
+
+            // Also create a default trip_config so ItineraryPage doesn't think it's unconfigured
+            await supabase.from('trip_config').insert({
+                trip_id: tripData.id,
+                flight_info: {
+                    destination: data.destination,
+                    startDate: data.start,
+                    endDate: data.end
+                }
+            });
+
+            return tripData;
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['trips'] });
             toast.success('Trip created successfully!');
             setIsCreateModalOpen(false);
             setNewTripName('');
+            setDestination('');
+            setStartDate('');
+            setEndDate('');
             navigate(`/trips/${data.id}/itinerary`); // Redirect to new trip
         },
         onError: (error: any) => {
@@ -109,8 +152,13 @@ const TripListPage = () => {
     });
 
     const handleCreateTrip = () => {
-        if (!newTripName.trim()) return;
-        createTripMutation.mutate(newTripName);
+        if (!newTripName.trim() || !destination.trim() || !startDate || !endDate) return;
+        createTripMutation.mutate({
+            name: newTripName,
+            destination: destination,
+            start: startDate,
+            end: endDate
+        });
     };
 
     return (
@@ -225,13 +273,47 @@ const TripListPage = () => {
                                 />
                             </div>
 
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">Destination</label>
+                                <div className="relative">
+                                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. Tokyo, Japan"
+                                        value={destination}
+                                        onChange={(e) => setDestination(e.target.value)}
+                                        className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-btn focus:ring-2 focus:ring-btn/20 outline-none transition-all font-medium text-gray-800 placeholder:text-gray-400"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Start Date</label>
+                                    <input
+                                        type="date"
+                                        value={startDate}
+                                        onChange={(e) => setStartDate(e.target.value)}
+                                        className="w-full px-3 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-btn focus:ring-2 focus:ring-btn/20 outline-none transition-all font-medium text-gray-800 text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">End Date</label>
+                                    <input
+                                        type="date"
+                                        value={endDate}
+                                        onChange={(e) => setEndDate(e.target.value)}
+                                        className="w-full px-3 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-btn focus:ring-2 focus:ring-btn/20 outline-none transition-all font-medium text-gray-800 text-sm"
+                                    />
+                                </div>
+                            </div>
+
                             <button
                                 onClick={handleCreateTrip}
-                                disabled={createTripMutation.isPending || !newTripName.trim()}
-                                className="w-full py-3 px-4 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
+                                disabled={createTripMutation.isPending || !newTripName.trim() || !destination.trim() || !startDate || !endDate}
+                                className="w-full py-3 px-4 bg-btn text-white rounded-xl font-bold hover:bg-opacity-90 transition-all disabled:opacity-50 flex justify-center items-center gap-2 shadow-sm"
                             >
-                                {createTripMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                                Create Trip
+                                {createTripMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : <Check className="w-6 h-6" />}
                             </button>
                         </div>
                     </div>
@@ -279,17 +361,23 @@ const TripListPage = () => {
                             <div className="flex gap-3 pt-2">
                                 <button
                                     onClick={() => setIsEditModalOpen(false)}
-                                    className="flex-1 py-3 px-4 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-colors"
+                                    className="flex-1 py-3 px-4 rounded-xl font-bold text-gray-400 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-center"
                                 >
-                                    Cancel
+                                    <X className="w-6 h-6" />
+                                </button>
+                                <button
+                                    onClick={handleDelete}
+                                    disabled={deleteTripMutation.isPending}
+                                    className="flex-1 py-3 px-4 bg-red-50 text-red-500 rounded-xl font-bold hover:bg-red-100 transition-colors disabled:opacity-50 flex items-center justify-center"
+                                >
+                                    {deleteTripMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : <Trash2 className="w-6 h-6" />}
                                 </button>
                                 <button
                                     onClick={handleSave}
                                     disabled={updateTripMutation.isPending}
-                                    className="flex-1 py-3 px-4 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
+                                    className="flex-1 py-3 px-4 bg-btn text-white rounded-xl font-bold hover:bg-opacity-90 transition-all disabled:opacity-50 flex justify-center items-center gap-2 shadow-sm"
                                 >
-                                    {updateTripMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                                    Save Changes
+                                    {updateTripMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : <Check className="w-6 h-6" />}
                                 </button>
                             </div>
                         </div>

@@ -250,29 +250,7 @@ const InfoPage = () => {
                     <div className="bg-white rounded-3xl p-6 shadow-xl shadow-blue-50/50 border border-blue-50 space-y-6 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-transparent rounded-bl-full -mr-8 -mt-8 opacity-50 pointer-events-none" />
 
-                        {/* Destination */}
-                        <div className="flex items-start gap-4">
-                            <div className="p-3 bg-blue-50 rounded-2xl flex-shrink-0">
-                                <MapPin className="w-6 h-6 text-sub-title" />
-                            </div>
-                            <div>
-                                <p className="text-xs text-gray-400 font-bold tracking-wider uppercase mb-1">DESTINATION</p>
-                                <p className="text-2xl font-bold text-gray-900">{destination || '未設定'}</p>
-                            </div>
-                        </div>
 
-                        {/* Date */}
-                        <div className="flex items-start gap-4">
-                            <div className="p-3 bg-pink-50 rounded-2xl flex-shrink-0">
-                                <Calendar className="w-6 h-6 text-sub-title" />
-                            </div>
-                            <div>
-                                <p className="text-xs text-gray-400 font-bold tracking-wider uppercase mb-1">DATES</p>
-                                <p className="text-lg font-bold text-gray-900">
-                                    {startDate} <span className="text-gray-300 mx-1">→</span> {endDate}
-                                </p>
-                            </div>
-                        </div>
                     </div>
 
                     {/* Flight Info */}
@@ -414,40 +392,7 @@ const InfoPage = () => {
             </header>
 
             <div className="space-y-8">
-                {/* Basic Section */}
-                <section className="space-y-4">
-                    <h3 className="text-sm font-bold text-gray-400 tracking-wider uppercase">BASIC</h3>
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-600">目的地</label>
-                            <input
-                                value={destination}
-                                onChange={(e) => setDestination(e.target.value)}
-                                className="w-full p-4 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black"
-                            />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-600">開始日期</label>
-                                <input
-                                    type="date"
-                                    value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
-                                    className="w-full p-3 bg-gray-50 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-black"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-600">結束日期</label>
-                                <input
-                                    type="date"
-                                    value={endDate}
-                                    onChange={(e) => setEndDate(e.target.value)}
-                                    className="w-full p-3 bg-gray-50 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-black"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </section>
+
 
                 {/* Flight Section */}
                 <section className="space-y-4">
