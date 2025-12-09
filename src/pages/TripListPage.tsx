@@ -28,35 +28,15 @@ const TripListPage = () => {
     const { data: trips, isLoading } = useQuery({
         queryKey: ['trips'],
         queryFn: async () => {
-            // 1. Fetch trips owned by user
-            const { data: ownedTrips, error: ownedError } = await supabase
+            // RLS policies now handle access control (Owners + Members)
+            // Just select * from trips and let Supabase filter it for us.
+            const { data, error } = await supabase
                 .from('trips')
                 .select('*')
-                .eq('user_id', user?.id)
                 .order('start_date', { ascending: true });
 
-            if (ownedError) throw ownedError;
-
-            // 2. Fetch trips where user is a member
-            const { data: memberTripsData, error: memberError } = await supabase
-                .from('trip_members')
-                .select('trip_id, trips:trips(*)')
-                .eq('user_id', user?.id);
-
-            if (memberError) throw memberError;
-
-            // Extract trips from the joined relation
-            const sharedTrips = memberTripsData?.map((item: any) => item.trips).filter(Boolean) || [];
-
-            // 3. Combine and Deduplicate
-            const allTrips = [...(ownedTrips || []), ...sharedTrips];
-            // Remove duplicates just in case (e.g. if logic allows being both owner and member)
-            const uniqueTrips = Array.from(new Map(allTrips.map(t => [t.id, t])).values())
-                .sort((a, b) => new Date(a.start_date || 0).getTime() - new Date(b.start_date || 0).getTime());
-
-            return uniqueTrips as Trip[];
-
-
+            if (error) throw error;
+            return data as Trip[];
         },
         enabled: !!user?.id
     });
