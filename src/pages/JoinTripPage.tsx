@@ -72,6 +72,39 @@ const JoinTripPage = () => {
                     throw joinError;
                 }
 
+                // --- Auto-add to Companions List ---
+                try {
+                    // 1. Get User Name
+                    const userName = user.user_metadata?.name || user.email?.split('@')[0] || 'Friend';
+
+                    // 2. Fetch current companions
+                    const { data: configData, error: configError } = await supabase
+                        .from('trip_config')
+                        .select('id, companions')
+                        .eq('trip_id', tripId)
+                        .single();
+
+                    if (!configError && configData) {
+                        const currentCompanions = configData.companions || [];
+
+                        // 3. Add if not exists
+                        // Case insensitive check to avoid duplicates like "David" vs "david"
+                        const exists = currentCompanions.some((c: string) => c.toLowerCase() === userName.toLowerCase());
+
+                        if (!exists) {
+                            const newCompanions = [...currentCompanions, userName];
+                            await supabase
+                                .from('trip_config')
+                                .update({ companions: newCompanions })
+                                .eq('id', configData.id);
+                        }
+                    }
+                } catch (companionError) {
+                    console.error('Failed to auto-add companion:', companionError);
+                    // Non-critical error, continue to success
+                }
+                // -----------------------------------
+
                 setStatus('success');
                 toast.success('Successfully joined the trip!');
                 setTimeout(() => navigate(`/trips/${tripId}/itinerary`), 1500);
