@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Plus, Calendar, MapPin, ChevronRight, LogOut, Edit2, X, Loader2, Trash2, Check, Save } from 'lucide-react';
+import { Plus, Calendar, MapPin, ChevronRight, LogOut, Edit2, X, Loader2, Trash2, Check, Crown, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
@@ -15,6 +15,7 @@ type Trip = {
     location: string;
     start_date: string; // Real DB column
     end_date: string;   // Real DB column
+    user_id: string;    // Owner ID
 };
 
 const TripListPage = () => {
@@ -61,15 +62,49 @@ const TripListPage = () => {
     });
 
     const updateTripMutation = useMutation({
-        mutationFn: async (updatedTrip: { id: string, name: string, cover_image: string }) => {
-            const { error } = await supabase
+        mutationFn: async (updatedTrip: { id: string; name: string; cover_image: string; location: string; start_date: string; end_date: string }) => {
+            // 1. Update 'trips' table
+            const { error: tripError } = await supabase
                 .from('trips')
-                .update({ name: updatedTrip.name, cover_image: updatedTrip.cover_image })
+                .update({
+                    name: updatedTrip.name,
+                    cover_image: updatedTrip.cover_image,
+                    location: updatedTrip.location,
+                    start_date: updatedTrip.start_date,
+                    end_date: updatedTrip.end_date
+                })
                 .eq('id', updatedTrip.id);
-            if (error) throw error;
+            if (tripError) throw tripError;
+
+            // 2. Fetch current trip_config to preserve flights
+            const { data: configData, error: fetchError } = await supabase
+                .from('trip_config')
+                .select('flight_info')
+                .eq('trip_id', updatedTrip.id)
+                .single();
+
+            if (!fetchError && configData) {
+                // 3. Update 'trip_config' with new dates/destination, preserving flights
+                const currentFlightInfo = configData.flight_info || {};
+                const newFlightInfo = {
+                    ...currentFlightInfo,
+                    destination: updatedTrip.location,
+                    startDate: updatedTrip.start_date,
+                    endDate: updatedTrip.end_date
+                };
+
+                const { error: configUpdateError } = await supabase
+                    .from('trip_config')
+                    .update({ flight_info: newFlightInfo })
+                    .eq('trip_id', updatedTrip.id);
+
+                if (configUpdateError) console.error('Failed to sync trip_config:', configUpdateError);
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['trips'] });
+            // Also invalidate tripConfig in case user navigates immediately
+            queryClient.invalidateQueries({ queryKey: ['tripConfig'] });
             toast.success('Trip updated successfully');
             setIsEditModalOpen(false);
         },
@@ -90,7 +125,10 @@ const TripListPage = () => {
         updateTripMutation.mutate({
             id: editingTrip.id,
             name: editingTrip.name,
-            cover_image: editingTrip.cover_image
+            cover_image: editingTrip.cover_image,
+            location: editingTrip.location,
+            start_date: editingTrip.start_date,
+            end_date: editingTrip.end_date
         });
     };
 
@@ -217,7 +255,14 @@ const TripListPage = () => {
                                         )}
                                     </div>
                                     <div className="flex-1 flex flex-col justify-center py-1">
-                                        <h3 className="text-lg font-bold text-gray-800 mb-1 leading-tight">{trip.name}</h3>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <h3 className="text-lg font-bold text-gray-800 leading-tight">{trip.name}</h3>
+                                            {trip.user_id === user?.id ? (
+                                                <Crown className="w-3 h-3 text-yellow-500 fill-yellow-500 shrink-0" />
+                                            ) : (
+                                                <Users className="w-3 h-3 text-blue-500 fill-blue-500 shrink-0" />
+                                            )}
+                                        </div>
                                         <div className="flex items-center gap-1.5 text-gray-400 text-xs font-medium mb-2">
                                             <MapPin className="w-3 h-3" />
                                             {trip.location || 'No Location'}
@@ -342,6 +387,40 @@ const TripListPage = () => {
                                         className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-btn focus:ring-2 focus:ring-btn/20 outline-none transition-all font-medium text-gray-800"
                                     />
                                 </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">Destination</label>
+                                    <div className="relative">
+                                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <input
+                                            type="text"
+                                            value={editingTrip.location}
+                                            onChange={(e) => setEditingTrip({ ...editingTrip, location: e.target.value })}
+                                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-btn focus:ring-2 focus:ring-btn/20 outline-none transition-all font-medium text-gray-800 text-sm"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-1">Start Date</label>
+                                        <input
+                                            type="date"
+                                            value={editingTrip.start_date}
+                                            onChange={(e) => setEditingTrip({ ...editingTrip, start_date: e.target.value })}
+                                            className="w-full px-3 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-btn focus:ring-2 focus:ring-btn/20 outline-none transition-all font-medium text-gray-800 text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-1">End Date</label>
+                                        <input
+                                            type="date"
+                                            value={editingTrip.end_date}
+                                            onChange={(e) => setEditingTrip({ ...editingTrip, end_date: e.target.value })}
+                                            className="w-full px-3 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-btn focus:ring-2 focus:ring-btn/20 outline-none transition-all font-medium text-gray-800 text-sm"
+                                        />
+                                    </div>
+                                </div>
+
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-1">Cover Image URL</label>
                                     <input

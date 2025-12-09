@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Loader2, Plus } from 'lucide-react';
 import DayView from '../features/itinerary/components/DayView';
 import ItineraryForm from '../features/itinerary/components/ItineraryForm';
@@ -110,6 +110,17 @@ export default function ItineraryPage() {
         upsertMutation.mutate(data);
     };
 
+    // Auto-scroll active tab into view
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (scrollContainerRef.current) {
+            const activeTab = scrollContainerRef.current.children[activeDayIndex] as HTMLElement;
+            if (activeTab) {
+                activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+        }
+    }, [activeDayIndex]);
+
     // Rendering
     if (isLoading) {
         return (
@@ -138,7 +149,10 @@ export default function ItineraryPage() {
 
             {/* Sticky Header with Tabs */}
             <div className="sticky top-0 bg-page-bg/95 backdrop-blur-sm z-10 border-b border-gray-100 shadow-sm">
-                <div className="px-4 py-3 pb-0 overflow-x-auto hide-scrollbar flex gap-2 snap-x">
+                <div
+                    ref={scrollContainerRef}
+                    className="px-4 py-3 pb-2 overflow-x-auto flex gap-2 snap-x scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
+                >
                     {days.map((day, idx) => (
                         <button
                             key={day.date}

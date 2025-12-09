@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { Loader2, Calendar, MapPin, Edit, Plane, Hotel, Users, Plus, X, Save, ArrowLeft, Maximize2, Share2 } from 'lucide-react';
+import { Loader2, Edit, Plane, Hotel, Users, Plus, X, Save, ArrowLeft, Maximize2, Share2 } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -247,11 +247,7 @@ const InfoPage = () => {
 
                 <div className="space-y-6">
                     {/* Main Info Card */}
-                    <div className="bg-white rounded-3xl p-6 shadow-xl shadow-blue-50/50 border border-blue-50 space-y-6 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-transparent rounded-bl-full -mr-8 -mt-8 opacity-50 pointer-events-none" />
 
-
-                    </div>
 
                     {/* Flight Info */}
                     <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-4">
@@ -571,7 +567,7 @@ const InfoPage = () => {
                 <button
                     onClick={() => updateMutation.mutate()}
                     disabled={updateMutation.isPending}
-                    className="w-full max-w-md mx-auto py-4 bg-gradient-to-r from-blue-300 to-purple-300 text-white rounded-2xl font-bold text-lg shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2 mb-4"
+                    className="w-full max-w-md mx-auto py-4 bg-btn text-white rounded-2xl font-bold text-lg shadow-lg active:scale-[0.98] hover:bg-opacity-90 transition-all flex items-center justify-center gap-2 mb-4"
                 >
                     {updateMutation.isPending ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
