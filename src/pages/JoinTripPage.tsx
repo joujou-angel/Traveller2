@@ -40,7 +40,7 @@ const JoinTripPage = () => {
                 // Or we can check existence first. Let's try simple insert and catch duplicate error.
 
                 // First, check if trip exists (optional, but good for UX)
-                const { data: trip, error: tripError } = await supabase
+                const { error: tripError } = await supabase
                     .from('trips')
                     .select('name')
                     .eq('id', tripId)
