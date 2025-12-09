@@ -29,7 +29,8 @@ export default function ItineraryItem({ item, onEdit, onDelete, isReadOnly = fal
     const colorClass = CategoryColors[item.category] || 'bg-gray-50 text-gray-500';
 
     // Format time (HH:MM:SS -> HH:MM)
-    const timeStr = item.start_time?.substring(0, 5) || '--:--';
+    // Format time (HH:MM:SS -> HH:MM)
+    const timeStr = item.start_time ? item.start_time.split(':').slice(0, 2).join(':') : '--:--';
 
     return (
         <div className="group relative pl-4 pb-8 border-l-2 border-gray-100 last:border-0 last:pb-0">
