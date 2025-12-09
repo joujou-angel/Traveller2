@@ -1,0 +1,185 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '../lib/supabase';
+import { useState, useMemo } from 'react';
+import { Loader2 } from 'lucide-react';
+import DayView from '../features/itinerary/components/DayView';
+import ItineraryForm from '../features/itinerary/components/ItineraryForm';
+import { useNavigate, useParams } from 'react-router-dom';
+
+const fetchTripConfig = async (tripId: string) => {
+    const { data, error } = await supabase
+        .from('trip_config')
+        .select('flight_info')
+        .eq('trip_id', tripId)
+        .single();
+
+    if (error) throw error;
+    if (!data?.flight_info?.startDate) return null; // Return null instead of error for UI handling
+    return data.flight_info;
+};
+
+export default function ItineraryPage() {
+    const { tripId } = useParams();
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
+
+    // State
+    const [activeDayIndex, setActiveDayIndex] = useState(0);
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [editingItem, setEditingItem] = useState<any>(null); // If null, it's Add mode
+
+    // 1. Fetch Trip Dates
+    const { data: tripInfo, isLoading, error } = useQuery({
+        queryKey: ['tripConfig', tripId],
+        queryFn: () => fetchTripConfig(tripId!),
+        enabled: !!tripId,
+        retry: false
+    });
+
+    // 2. Calculate Day Tabs
+    const days = useMemo(() => {
+        if (!tripInfo) return [];
+
+        const start = new Date(tripInfo.startDate);
+        const end = new Date(tripInfo.endDate);
+        const list = [];
+
+        // Safety check loop limit
+        let current = new Date(start);
+        let count = 1;
+        while (current <= end && count <= 30) {
+            list.push({
+                label: `Day ${count}`,
+                date: current.toISOString().split('T')[0], // YYYY-MM-DD
+                fullDate: new Date(current) // clone
+            });
+            current.setDate(current.getDate() + 1);
+            count++;
+        }
+        return list;
+    }, [tripInfo]);
+
+    // Mutations
+    const upsertMutation = useMutation({
+        mutationFn: async (formData: any) => {
+            const payload = {
+                ...formData,
+                trip_id: tripId, // Add trip_id
+                // Ensure date is set to the currently active tab's date
+                date: days[activeDayIndex].date
+            };
+
+            if (editingItem) {
+                // Update
+                const { error } = await supabase
+                    .from('itineraries')
+                    .update(payload)
+                    .eq('id', editingItem.id);
+                if (error) throw error;
+            } else {
+                // Insert
+                const { error } = await supabase
+                    .from('itineraries')
+                    .insert(payload);
+                if (error) throw error;
+            }
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['itineraries', tripId] }); // Scope by tripId
+            setIsFormOpen(false);
+            setEditingItem(null);
+        },
+        onError: (error) => {
+            console.error('Mutation Error:', error);
+            alert(`儲存失敗: ${error.message}`);
+        }
+    });
+
+    // Handlers
+    const handleAdd = () => {
+        setEditingItem(null);
+        setIsFormOpen(true);
+    };
+
+    const handleEdit = (item: any) => {
+        setEditingItem(item);
+        setIsFormOpen(true);
+    };
+
+    const handleFormSubmit = (data: any) => {
+        upsertMutation.mutate(data);
+    };
+
+    // Rendering
+    if (isLoading) {
+        return (
+            <div className="h-full flex items-center justify-center text-gray-400">
+                <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+        );
+    }
+
+    if (error || days.length === 0) {
+        return (
+            <div className="p-8 text-center">
+                <h2 className="text-xl font-bold text-gray-700 mb-2">還沒有旅程設定</h2>
+                <button
+                    onClick={() => navigate('/setup')}
+                    className="bg-gray-900 text-white px-6 py-2 rounded-xl"
+                >
+                    前往設定
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="h-full flex flex-col bg-cream">
+
+            {/* Sticky Header with Tabs */}
+            <div className="sticky top-0 bg-cream/95 backdrop-blur-sm z-10 border-b border-gray-100 shadow-sm">
+                <div className="px-4 py-3 pb-0 overflow-x-auto hide-scrollbar flex gap-2 snap-x">
+                    {days.map((day, idx) => (
+                        <button
+                            key={day.date}
+                            onClick={() => setActiveDayIndex(idx)}
+                            className={`
+                            snap-start flex-shrink-0 px-4 py-3 rounded-t-2xl font-bold text-sm transition-all relative
+                            ${activeDayIndex === idx ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'}
+                        `}
+                        >
+                            <span>{day.label}</span>
+                            <div className="text-[10px] opacity-60 font-medium">
+                                {day.fullDate.getMonth() + 1}/{day.fullDate.getDate()}
+                            </div>
+
+                            {/* Active Indicator Line */}
+                            {activeDayIndex === idx && (
+                                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-macaron-blue"></div>
+                            )}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Content Area */}
+            <div className="flex-1 p-4 bg-white min-h-[calc(100vh-140px)]">
+                <DayView
+                    tripId={tripId!} // Pass tripId
+                    date={days[activeDayIndex].date}
+                    onAdd={handleAdd}
+                    onEdit={handleEdit}
+                />
+            </div>
+
+            {/* Form Modal */}
+            {isFormOpen && (
+                <ItineraryForm
+                    initialData={editingItem}
+                    onSubmit={handleFormSubmit}
+                    onCancel={() => setIsFormOpen(false)}
+                />
+            )}
+        </div>
+    );
+}
