@@ -11,21 +11,40 @@ interface ItineraryFormProps {
 export default function ItineraryForm({ initialData, onSubmit, onCancel }: ItineraryFormProps) {
     const { register, handleSubmit, reset } = useForm({
         defaultValues: {
-            start_time: '09:00',
+            hour: '09',
+            minute: '00',
             category: 'activity',
             location: '',
             google_map_link: '',
             notes: '',
-            ...initialData
+            initial_start_time: initialData?.start_time // temp storage
         }
     });
 
-    // Reset if initialData changes (e.g. switching from add to edit)
+    // Reset if initialData changes
     useEffect(() => {
         if (initialData) {
-            reset(initialData);
+            const [h, m] = (initialData.start_time || '09:00').split(':');
+            reset({
+                ...initialData,
+                hour: h,
+                minute: m || '00'
+            });
         }
     }, [initialData, reset]);
+
+    const handleFormSubmit = (data: any) => {
+        // Construct HH:MM string
+        const finalData = {
+            ...data,
+            start_time: `${data.hour}:${data.minute}`
+        };
+        delete finalData.hour;
+        delete finalData.minute;
+        delete finalData.initial_start_time;
+
+        onSubmit(finalData);
+    };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -43,19 +62,44 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
 
                     <div className="grid grid-cols-2 gap-4">
                         {/* Time */}
+                        {/* Time (Custom 24H Input) */}
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-gray-500 ml-1">時間</label>
-                            <div className="relative">
-                                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                <input
-                                    type="time"
-                                    {...register('start_time', { required: true })}
-                                    className="w-full pl-10 pr-3 py-3 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-btn"
-                                />
+                            <label className="text-xs font-bold text-gray-500 ml-1">時間 (24小時制)</label>
+                            <div className="flex gap-2 items-center">
+                                <div className="relative flex-1">
+                                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <input
+                                        type="number"
+                                        placeholder="HH"
+                                        min="0"
+                                        max="23"
+                                        {...register('hour', { required: true, min: 0, max: 23 })}
+                                        className="w-full pl-10 pr-2 py-3 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-btn text-center font-mono [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        onBlur={(e) => {
+                                            const val = parseInt(e.target.value);
+                                            if (!isNaN(val)) e.target.value = val.toString().padStart(2, '0');
+                                        }}
+                                    />
+                                </div>
+                                <span className="text-gray-400 font-bold">:</span>
+                                <div className="relative flex-1">
+                                    <input
+                                        type="number"
+                                        placeholder="MM"
+                                        min="0"
+                                        max="59"
+                                        {...register('minute', { required: true, min: 0, max: 59 })}
+                                        className="w-full px-2 py-3 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-btn text-center font-mono [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        onBlur={(e) => {
+                                            const val = parseInt(e.target.value);
+                                            if (!isNaN(val)) e.target.value = val.toString().padStart(2, '0');
+                                        }}
+                                    />
+                                </div>
                             </div>
                         </div>
 
