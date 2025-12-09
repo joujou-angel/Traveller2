@@ -79,7 +79,7 @@ export default function DayView({ tripId, date, onAdd, onEdit, isReadOnly = fals
                 ) : (
                     <div className="text-center py-12 border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/50">
                         <p className="text-gray-400 mb-2">這天還沒有行程</p>
-                        <p className="text-gray-400 mb-2">這天還沒有行程</p>
+
                         {!isReadOnly && (
                             <button onClick={onAdd} className="text-btn font-bold hover:underline">
                                 點擊新增
