@@ -5,6 +5,7 @@ interface ItineraryItemProps {
     item: any;
     onEdit: (item: any) => void;
     onDelete: (id: number) => void;
+    isReadOnly?: boolean;
 }
 
 const CategoryIcons: Record<string, any> = {
@@ -21,7 +22,7 @@ const CategoryColors: Record<string, string> = {
     activity: 'bg-positive/20 text-positive border-positive/30',
 };
 
-export default function ItineraryItem({ item, onEdit, onDelete }: ItineraryItemProps) {
+export default function ItineraryItem({ item, onEdit, onDelete, isReadOnly = false }: ItineraryItemProps) {
     const [isExpanded, setIsExpanded] = useState(false);
 
     const Icon = CategoryIcons[item.category] || Camera;
@@ -84,21 +85,23 @@ export default function ItineraryItem({ item, onEdit, onDelete }: ItineraryItemP
                                 <span className="text-xs text-gray-400">No link provided</span>
                             )}
 
-                            {/* Edit/Delete */}
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); onEdit(item); }}
-                                    className="p-2 bg-white rounded-full text-gray-600 shadow-sm hover:text-blue-500 hover:shadow transition-all"
-                                >
-                                    <Edit2 className="w-4 h-4" />
-                                </button>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
-                                    className="p-2 bg-white rounded-full text-gray-600 shadow-sm hover:text-red-500 hover:shadow transition-all"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                            </div>
+                            {/* Edit/Delete - Only show if not read only */}
+                            {!isReadOnly && (
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); onEdit(item); }}
+                                        className="p-2 bg-white rounded-full text-gray-600 shadow-sm hover:text-blue-500 hover:shadow transition-all"
+                                    >
+                                        <Edit2 className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
+                                        className="p-2 bg-white rounded-full text-gray-600 shadow-sm hover:text-red-500 hover:shadow transition-all"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

@@ -5,23 +5,26 @@ import { Loader2, Plus } from 'lucide-react';
 import DayView from '../features/itinerary/components/DayView';
 import ItineraryForm from '../features/itinerary/components/ItineraryForm';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const fetchTripConfig = async (tripId: string) => {
     const { data, error } = await supabase
         .from('trip_config')
-        .select('flight_info')
+        .select('flight_info, trips(user_id)') // Fetch trip owner via join
         .eq('trip_id', tripId)
         .single();
 
     if (error) throw error;
-    if (!data?.flight_info?.startDate) return null; // Return null instead of error for UI handling
-    return data.flight_info;
+    if (!data?.flight_info?.startDate) return null;
+    const tripsData = data.trips as any; // Cast to bypass array check
+    return { ...data.flight_info, ownerId: tripsData?.user_id || (Array.isArray(tripsData) ? tripsData[0]?.user_id : null) };
 };
 
 export default function ItineraryPage() {
     const { tripId } = useParams();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const { user } = useAuth();
 
     // State
     const [activeDayIndex, setActiveDayIndex] = useState(0);
@@ -35,6 +38,8 @@ export default function ItineraryPage() {
         enabled: !!tripId,
         retry: false
     });
+
+    const isOwner = tripInfo?.ownerId === user?.id; // Check ownership
 
     // 2. Calculate Day Tabs
     const days = useMemo(() => {
@@ -132,14 +137,18 @@ export default function ItineraryPage() {
 
     if (error || days.length === 0) {
         return (
-            <div className="p-8 text-center">
+            <div className="p-8 text-center flex flex-col items-center justify-center h-full">
                 <h2 className="text-xl font-bold text-gray-700 mb-2">還沒有旅程設定</h2>
-                <button
-                    onClick={() => navigate('/setup')}
-                    className="bg-gray-900 text-white px-6 py-2 rounded-xl"
-                >
-                    前往設定
-                </button>
+                {isOwner ? (
+                    <button
+                        onClick={() => navigate('/setup')}
+                        className="bg-gray-900 text-white px-6 py-2 rounded-xl hover:bg-gray-800 transition-colors"
+                    >
+                        前往設定
+                    </button>
+                ) : (
+                    <p className="text-gray-400 text-sm">請等待主辦人設定行程日期與地點</p>
+                )}
             </div>
         );
     }
@@ -183,16 +192,19 @@ export default function ItineraryPage() {
                     date={days[activeDayIndex].date}
                     onAdd={handleAdd}
                     onEdit={handleEdit}
+                    isReadOnly={!isOwner}
                 />
             </div>
 
-            {/* FAB */}
-            <button
-                onClick={handleAdd}
-                className="fixed bottom-24 right-6 w-14 h-14 bg-btn text-white rounded-full shadow-lg shadow-gray-200 flex items-center justify-center active:scale-90 transition-all hover:scale-105 z-40"
-            >
-                <Plus className="w-6 h-6" />
-            </button>
+            {/* FAB - Only show for Owner */}
+            {isOwner && (
+                <button
+                    onClick={handleAdd}
+                    className="fixed bottom-24 right-6 w-14 h-14 bg-btn text-white rounded-full shadow-lg shadow-gray-200 flex items-center justify-center active:scale-90 transition-all hover:scale-105 z-40"
+                >
+                    <Plus className="w-6 h-6" />
+                </button>
+            )}
 
             {/* Form Modal */}
             {isFormOpen && (

@@ -61,6 +61,27 @@ const TripListPage = () => {
         }
     });
 
+    const leaveTripMutation = useMutation({
+        mutationFn: async (tripId: string) => {
+            const { error } = await supabase
+                .from('trip_members')
+                .delete()
+                .eq('trip_id', tripId)
+                .eq('user_id', user?.id);
+
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['trips'] });
+            toast.success('Left trip successfully');
+            setIsEditModalOpen(false);
+        },
+        onError: (error) => {
+            toast.error('Failed to leave trip');
+            console.error(error);
+        }
+    });
+
     const updateTripMutation = useMutation({
         mutationFn: async (updatedTrip: { id: string; name: string; cover_image: string; location: string; start_date: string; end_date: string }) => {
             // 1. Update 'trips' table
@@ -134,8 +155,17 @@ const TripListPage = () => {
 
     const handleDelete = () => {
         if (!editingTrip) return;
-        if (window.confirm('Are you sure you want to delete this trip? This action cannot be undone.')) {
-            deleteTripMutation.mutate(editingTrip.id);
+
+        const isOwner = editingTrip.user_id === user?.id;
+
+        if (isOwner) {
+            if (window.confirm('Are you sure you want to delete this trip? This action cannot be undone.')) {
+                deleteTripMutation.mutate(editingTrip.id);
+            }
+        } else {
+            if (window.confirm('Are you sure you want to leave this trip? You will need an invite to join again.')) {
+                leaveTripMutation.mutate(editingTrip.id);
+            }
         }
     };
 
@@ -449,7 +479,13 @@ const TripListPage = () => {
                                     disabled={deleteTripMutation.isPending}
                                     className="flex-1 py-3 px-4 bg-red-50 text-red-500 rounded-xl font-bold hover:bg-red-100 transition-colors disabled:opacity-50 flex items-center justify-center"
                                 >
-                                    {deleteTripMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : <Trash2 className="w-6 h-6" />}
+                                    {deleteTripMutation.isPending || leaveTripMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : (
+                                        editingTrip.user_id === user?.id ? (
+                                            <Trash2 className="w-6 h-6" />
+                                        ) : (
+                                            <LogOut className="w-6 h-6" />
+                                        )
+                                    )}
                                 </button>
                                 <button
                                     onClick={handleSave}

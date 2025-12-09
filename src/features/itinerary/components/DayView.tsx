@@ -8,6 +8,7 @@ interface DayViewProps {
     date: string; // ISO date string YYYY-MM-DD
     onAdd: () => void;
     onEdit: (item: any) => void;
+    isReadOnly?: boolean;
 }
 
 const fetchItineraries = async (tripId: string, date: string) => {
@@ -22,7 +23,7 @@ const fetchItineraries = async (tripId: string, date: string) => {
     return data;
 };
 
-export default function DayView({ tripId, date, onAdd, onEdit }: DayViewProps) {
+export default function DayView({ tripId, date, onAdd, onEdit, isReadOnly = false }: DayViewProps) {
     const queryClient = useQueryClient();
 
     // Fetch Items
@@ -67,6 +68,7 @@ export default function DayView({ tripId, date, onAdd, onEdit }: DayViewProps) {
                             key={item.id}
                             item={item}
                             onEdit={onEdit}
+                            isReadOnly={isReadOnly}
                             onDelete={(id) => {
                                 if (confirm('確定要刪除這個行程嗎？')) {
                                     deleteMutation.mutate(id);
@@ -77,9 +79,12 @@ export default function DayView({ tripId, date, onAdd, onEdit }: DayViewProps) {
                 ) : (
                     <div className="text-center py-12 border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/50">
                         <p className="text-gray-400 mb-2">這天還沒有行程</p>
-                        <button onClick={onAdd} className="text-btn font-bold hover:underline">
-                            點擊新增
-                        </button>
+                        <p className="text-gray-400 mb-2">這天還沒有行程</p>
+                        {!isReadOnly && (
+                            <button onClick={onAdd} className="text-btn font-bold hover:underline">
+                                點擊新增
+                            </button>
+                        )}
                     </div>
                 )}
             </div>
