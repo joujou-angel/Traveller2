@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useNavigate } from 'react-router-dom';
 import { Plane, MapPin, ArrowRight, Calendar } from 'lucide-react';
-import { DayPicker, type DateRange } from 'react-day-picker';
+import { DayPicker } from 'react-day-picker';
 import { format } from 'date-fns';
 import 'react-day-picker/dist/style.css';
 import { supabase } from '../lib/supabase';
