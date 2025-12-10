@@ -1,16 +1,30 @@
 
 export const TravellerLogo = ({ className = "w-10 h-10" }: { className?: string }) => (
-    <svg className={className} viewBox="0 0 250 250" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path
-            d="M211.36 100.28C222.84 125.79 205.7 185.11 170.82 215.93C135.94 246.75 69.24 233.56 34.36 202.74C-0.52 171.92 -10.97 104.99 10.51 79.48C31.99 53.97 86.6 30.67 141.21 41.74C195.82 52.81 199.88 74.77 211.36 100.28Z"
-            fill="#D9C9BE" />
+    <svg className={className} viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <title>IJou Organic Rough Handwriting</title>
+        <desc>A casual, organic handwritten logo for "I jou" with purposeful imperfections to avoid a rigid look.</desc>
 
-        <path
-            d="M62 135C62 135 77 114 97 114C117 114 135 133 130 152C126.17 166.45 106.84 163.51 98.5 152C87 135 84 105 103 98C127 89 157 110 178 135C193.3 153.3 203.22 178.69 203.22 178.69"
-            stroke="#F9F4F0" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        <path fill="#d4c4b8" d="M387.5,136.2c-41.9-53.4-110.9-72.6-174.4-58c-68.6,15.8-128.2,72.9-143.7,146.3
+	c-14.5,68.6,10.3,144.3,66.7,188.2c53.4,41.6,127.6,49.8,189.1,26.1c58.7-22.7,106.6-73.5,123.4-136.9
+	C463.4,246.7,434.6,196.3,387.5,136.2z"/>
 
-        <circle cx="85" cy="80" r="5" fill="#F9F4F0" />
-        <circle cx="132" cy="116" r="5" fill="#F9F4F0" />
+        <g fill="none" stroke="#faf8f5" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round">
 
+            <path d="M130,185 Q150,182 170,180" />
+            <path d="M150,182 Q155,230 148,275" />
+            <path d="M135,275 Q150,278 165,275" />
+
+            <path d="M230,220 Q235,300 230,320 Q220,360 190,350" />
+            <path d="M235,185 L236,186" strokeWidth="14" />
+
+            <path d="M305,240 
+             Q275,235 275,270 
+             Q275,300 305,300 
+             Q330,300 325,270 
+             Q322,255 310,250" />
+
+            <path d="M355,250 Q355,300 380,300 Q400,300 400,260 M400,260 L400,305" />
+
+        </g>
     </svg>
 );
