@@ -2,7 +2,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useNavigate } from 'react-router-dom';
-import { Plane, MapPin, ArrowRight } from 'lucide-react';
+import { Plane, MapPin, ArrowRight, Calendar } from 'lucide-react';
+import { DayPicker, type DateRange } from 'react-day-picker';
+import { format } from 'date-fns';
+import 'react-day-picker/dist/style.css';
 import { supabase } from '../lib/supabase';
 import { useState } from 'react';
 
@@ -28,7 +31,9 @@ export default function TripSetupPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const { register, handleSubmit, reset, formState: { errors } } = useForm<TripFormValues>({
+    const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+    const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<TripFormValues>({
         resolver: zodResolver(schema),
     });
 
@@ -142,30 +147,74 @@ export default function TripSetupPage() {
                         {errors.destination && <p className="text-red-400 text-xs ml-1">{errors.destination.message}</p>}
                     </div>
 
-                    {/* Date Range */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-semibold ml-1 text-gray-600">去程</label>
-                            <div className="relative">
-                                <input
-                                    {...register("startDate")}
-                                    type="date"
-                                    className="w-full pl-4 pr-2 py-3 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-btn focus:bg-white transition-all text-sm font-medium"
-                                />
-                            </div>
-                            {errors.startDate && <p className="text-red-400 text-xs ml-1">{errors.startDate.message}</p>}
+                    {/* Date Range Selection */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold ml-1 text-gray-600">日期</label>
+                        <div className="relative">
+                            <button
+                                type="button"
+                                onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+                                className="w-full pl-12 pr-4 py-4 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-btn focus:bg-white transition-all font-medium text-left flex items-center"
+                            >
+                                <Calendar className="absolute left-4 text-gray-400 w-5 h-5" />
+                                <span className={watch("startDate") ? "text-gray-900" : "text-gray-400"}>
+                                    {watch("startDate") && watch("endDate")
+                                        ? `${format(new Date(watch("startDate")), "yyyy/MM/dd")} - ${format(new Date(watch("endDate")), "yyyy/MM/dd")}`
+                                        : "選擇日期範圍"}
+                                </span>
+                            </button>
+
+                            {isCalendarOpen && (
+                                <div className="absolute z-10 bottom-full mb-2 left-0 w-full bg-white p-4 rounded-2xl shadow-xl border border-gray-100 flex justify-center animate-fade-in-up">
+                                    <style>{`
+                                        .rdp { --rdp-cell-size: 32px; --rdp-accent-color: #2D3748; --rdp-background-color: #EDF2F7; margin: 0; }
+                                        .rdp-button:hover:not([disabled]):not(.rdp-day_selected) { background-color: #EDF2F7; }
+                                        .rdp-day_selected { background-color: #1a202c !important; color: white !important; }
+                                        .rdp-day_selected:hover { background-color: #2d3748 !important; }
+                                    `}</style>
+                                    <DayPicker
+                                        mode="range"
+                                        selected={{
+                                            from: watch("startDate") ? new Date(watch("startDate")) : undefined,
+                                            to: watch("endDate") ? new Date(watch("endDate")) : undefined,
+                                        }}
+                                        onSelect={(range) => {
+                                            if (range?.from) {
+                                                setValue("startDate", format(range.from, "yyyy-MM-dd"), { shouldValidate: true });
+                                            } else {
+                                                setValue("startDate", "", { shouldValidate: true });
+                                            }
+
+                                            if (range?.to) {
+                                                setValue("endDate", format(range.to, "yyyy-MM-dd"), { shouldValidate: true });
+                                            } else {
+                                                // Often react-day-picker returns undefined for 'to' if only one day is clicked
+                                                // We can allow users to pick the same day as start and end, or wait for the second click
+                                                // If range.to is undefined, we might just keep endDate empty or set it same as start if that's desired behavior.
+                                                // For 'travel', usually it's > 1 day, but 1 day is possible.
+                                                // Let's clear endDate if not selected to force user to pick range or pick same day again if supported.
+                                                setValue("endDate", "", { shouldValidate: true });
+                                            }
+
+                                            if (range?.from && range?.to) {
+                                                setIsCalendarOpen(false);
+                                            }
+                                        }}
+                                        numberOfMonths={1}
+                                        defaultMonth={new Date()}
+                                        modifiersClassNames={{
+                                            selected: "bg-gray-900 text-white",
+                                            today: "font-bold text-btn"
+                                        }}
+                                    />
+                                </div>
+                            )}
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-semibold ml-1 text-gray-600">回程</label>
-                            <div className="relative">
-                                <input
-                                    {...register("endDate")}
-                                    type="date"
-                                    className="w-full pl-4 pr-2 py-3 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-btn focus:bg-white transition-all text-sm font-medium"
-                                />
-                            </div>
-                            {errors.endDate && <p className="text-red-400 text-xs ml-1">{errors.endDate.message}</p>}
-                        </div>
+                        {(errors.startDate || errors.endDate) && (
+                            <p className="text-red-400 text-xs ml-1">
+                                {errors.startDate?.message || errors.endDate?.message}
+                            </p>
+                        )}
                     </div>
 
                     <button

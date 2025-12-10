@@ -401,7 +401,7 @@ const TripListPage = () => {
                     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setIsEditModalOpen(false)}>
                         <div className="bg-white rounded-3xl w-full max-w-sm p-6 space-y-6 shadow-2xl" onClick={e => e.stopPropagation()}>
                             <div className="flex justify-between items-center">
-                                <h3 className="text-xl font-bold text-gray-800">Edit Trip</h3>
+                                <h3 className="text-xl font-bold text-[#342b14]">Edit Trip</h3>
                                 <button onClick={() => setIsEditModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                                     <X className="w-5 h-5 text-gray-400" />
                                 </button>
@@ -409,58 +409,58 @@ const TripListPage = () => {
 
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">Trip Name</label>
+                                    <label className="block text-sm font-bold text-[#554030] mb-1">Trip Name</label>
                                     <input
                                         type="text"
                                         value={editingTrip.name}
                                         onChange={(e) => setEditingTrip({ ...editingTrip, name: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-btn focus:ring-2 focus:ring-btn/20 outline-none transition-all font-medium text-gray-800"
+                                        className="w-full px-4 py-3 rounded-xl bg-white border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] transition-all font-medium text-[#342b14]"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">Destination</label>
+                                    <label className="block text-sm font-bold text-[#554030] mb-1">Destination</label>
                                     <div className="relative">
-                                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a39992]" />
                                         <input
                                             type="text"
                                             value={editingTrip.location}
                                             onChange={(e) => setEditingTrip({ ...editingTrip, location: e.target.value })}
-                                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-btn focus:ring-2 focus:ring-btn/20 outline-none transition-all font-medium text-gray-800 text-sm"
+                                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] transition-all font-medium text-[#342b14] text-sm"
                                         />
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-1">Start Date</label>
+                                        <label className="block text-sm font-bold text-[#554030] mb-1">Start Date</label>
                                         <input
                                             type="date"
                                             value={editingTrip.start_date}
                                             onChange={(e) => setEditingTrip({ ...editingTrip, start_date: e.target.value })}
-                                            className="w-full px-3 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-btn focus:ring-2 focus:ring-btn/20 outline-none transition-all font-medium text-gray-800 text-sm"
+                                            className="w-full px-3 py-3 rounded-xl bg-white border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] transition-all font-medium text-[#342b14] text-sm"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-1">End Date</label>
+                                        <label className="block text-sm font-bold text-[#554030] mb-1">End Date</label>
                                         <input
                                             type="date"
                                             value={editingTrip.end_date}
                                             onChange={(e) => setEditingTrip({ ...editingTrip, end_date: e.target.value })}
-                                            className="w-full px-3 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-btn focus:ring-2 focus:ring-btn/20 outline-none transition-all font-medium text-gray-800 text-sm"
+                                            className="w-full px-3 py-3 rounded-xl bg-white border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] transition-all font-medium text-[#342b14] text-sm"
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">Cover Image URL</label>
+                                    <label className="block text-sm font-bold text-[#554030] mb-1">Cover Image URL</label>
                                     <input
                                         type="text"
                                         value={editingTrip.cover_image}
                                         onChange={(e) => setEditingTrip({ ...editingTrip, cover_image: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-btn focus:ring-2 focus:ring-btn/20 outline-none transition-all font-medium text-gray-800 text-sm"
+                                        className="w-full px-4 py-3 rounded-xl bg-white border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] transition-all font-medium text-[#342b14] text-sm"
                                     />
                                     {editingTrip.cover_image && (
-                                        <div className="mt-2 h-32 rounded-xl overflow-hidden bg-gray-100">
+                                        <div className="mt-2 h-32 rounded-xl overflow-hidden bg-gray-100 border border-[#e8e3de]">
                                             <img src={editingTrip.cover_image} alt="Preview" className="w-full h-full object-cover" />
                                         </div>
                                     )}
@@ -470,14 +470,14 @@ const TripListPage = () => {
                             <div className="flex gap-3 pt-2">
                                 <button
                                     onClick={() => setIsEditModalOpen(false)}
-                                    className="flex-1 py-3 px-4 rounded-xl font-bold text-gray-400 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-center"
+                                    className="flex-1 py-3 px-4 rounded-xl font-bold text-[#a39992] bg-white border border-[#e8e3de] hover:bg-gray-50 transition-colors flex items-center justify-center shadow-sm"
                                 >
                                     <X className="w-6 h-6" />
                                 </button>
                                 <button
                                     onClick={handleDelete}
                                     disabled={deleteTripMutation.isPending}
-                                    className="flex-1 py-3 px-4 bg-red-50 text-red-500 rounded-xl font-bold hover:bg-red-100 transition-colors disabled:opacity-50 flex items-center justify-center"
+                                    className="flex-1 py-3 px-4 bg-red-50 text-red-500 rounded-xl font-bold hover:bg-red-100 transition-colors disabled:opacity-50 flex items-center justify-center shadow-sm"
                                 >
                                     {deleteTripMutation.isPending || leaveTripMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : (
                                         editingTrip.user_id === user?.id ? (
@@ -490,7 +490,7 @@ const TripListPage = () => {
                                 <button
                                     onClick={handleSave}
                                     disabled={updateTripMutation.isPending}
-                                    className="flex-1 py-3 px-4 bg-btn text-white rounded-xl font-bold hover:bg-opacity-90 transition-all disabled:opacity-50 flex justify-center items-center gap-2 shadow-sm"
+                                    className="flex-1 py-3 px-4 bg-[#9B8D74] text-white rounded-xl font-bold hover:bg-opacity-90 transition-all disabled:opacity-50 flex justify-center items-center gap-2 shadow-lg shadow-[#9B8D74]/20"
                                 >
                                     {updateTripMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : <Check className="w-6 h-6" />}
                                 </button>

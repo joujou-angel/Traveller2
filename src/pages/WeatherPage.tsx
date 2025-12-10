@@ -1,65 +1,32 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '../lib/supabase';
-import { getWeatherDescription, getWeatherIcon } from '../lib/weatherHelpers';
-import { MapPin, Loader2, AlertCircle } from 'lucide-react';
+import { MapPin, Loader2, AlertCircle, RefreshCw, Info } from 'lucide-react';
 import { useParams, Link } from 'react-router-dom';
+import { useTripWeather } from '../hooks/useTripWeather';
+import { getWeatherDescription, getWeatherIcon } from '../lib/weatherHelpers';
 
-const fetchTripConfig = async (tripId: string) => {
-    const { data, error } = await supabase
-        .from('trip_config')
-        .select('*')
-        .eq('trip_id', tripId)
-        .single();
-
-    if (error) throw error;
-    // Handle case where trip_config exists but flight_info might be empty/partial
-    if (!data?.flight_info?.destination) {
-        throw new Error("尚未設定目的地");
-    }
-    return data.flight_info;
-};
-
-const fetchCoordinates = async (destination: string) => {
-    const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(destination)}&count=1&language=zh&format=json`);
-    const data = await response.json();
-    if (!data.results || data.results.length === 0) {
-        throw new Error("找不到該地點");
-    }
-    return data.results[0];
-};
-
-const fetchWeather = async (lat: number, long: number) => {
-    const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${long}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`);
-    return response.json();
-};
+const HistoricalIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 ml-1">
+        <path d="M17.5 19C19.9853 19 22 16.9853 22 14.5C22 12.132 20.177 10.244 17.819 10.035C17.65 6.425 14.672 3.5 11 3.5C7.328 3.5 4.35 6.425 4.181 10.035C1.823 10.244 0 12.132 0 14.5C0 16.9853 2.01472 19 4.5 19H12" stroke="#a39992" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="16" cy="19" r="5" fill="white" stroke="#9B8D74" strokeWidth="1.5" />
+        <path d="M16 16.5V19L17.5 20.5" stroke="#554030" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
 
 export default function WeatherPage() {
     const { tripId } = useParams();
-    // 1. Get Destination
-    const { data: tripData, isLoading: isTripLoading, error: tripError } = useQuery({
-        queryKey: ['tripConfig', tripId],
-        queryFn: () => fetchTripConfig(tripId!),
-        retry: false
-    });
 
-    // 2. Get Coordinates (Dependent on Trip)
-    const { data: geoData, isLoading: isGeoLoading, error: geoError } = useQuery({
-        queryKey: ['coordinates', tripData?.destination],
-        queryFn: () => fetchCoordinates(tripData!.destination),
-        enabled: !!tripData?.destination,
-    });
+    // Note: Use 'weatherSegments' now instead of raw weatherData
+    const {
+        weatherSegments,
+        tripData,
+        geoData,
+        isLoading,
+        error,
+        refetch,
+        isRefetching
+    } = useTripWeather(tripId);
 
-    // 3. Get Weather (Dependent on Coordinates)
-    const { data: weatherData, isLoading: isWeatherLoading } = useQuery({
-        queryKey: ['weather', geoData?.latitude, geoData?.longitude],
-        queryFn: () => fetchWeather(geoData.latitude, geoData.longitude),
-        enabled: !!geoData?.latitude,
-    });
-
-    const isLoading = isTripLoading || isGeoLoading || isWeatherLoading;
-    const error = tripError || geoError;
-
-    if (isLoading) {
+    // Initial Loading
+    if (isLoading && !weatherSegments) {
         return (
             <div className="h-full flex flex-col items-center justify-center p-8 text-gray-500">
                 <Loader2 className="w-8 h-8 animate-spin mb-2 text-sub-title" />
@@ -69,6 +36,7 @@ export default function WeatherPage() {
     }
 
     if (error) {
+        // ... (Error UI same as before)
         return (
             <div className="p-6 flex flex-col items-center justify-center text-center h-[60vh]">
                 <div className="bg-red-50 p-4 rounded-full mb-4">
@@ -87,58 +55,69 @@ export default function WeatherPage() {
 
     return (
         <div className="p-6 pb-24 space-y-6">
-            <header className="flex items-center space-x-2 mb-6">
-                <MapPin className="w-6 h-6 text-sub-title" />
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">{tripData?.destination}</h1>
-                    <p className="text-sm text-gray-500">{geoData?.country} {geoData?.admin1}</p>
+            <header className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-2">
+                    <MapPin className="w-6 h-6 text-sub-title" />
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">{tripData?.destination}</h1>
+                        <p className="text-sm text-gray-500">{geoData?.country} {geoData?.admin1}</p>
+                    </div>
                 </div>
+
+                <button
+                    onClick={() => refetch()}
+                    disabled={isRefetching}
+                    className="p-2 bg-white border border-gray-100 rounded-full shadow-sm active:scale-95 transition-all text-gray-500 hover:text-btn"
+                >
+                    <RefreshCw className={`w-5 h-5 ${isRefetching ? 'animate-spin' : ''}`} />
+                </button>
             </header>
 
             <div className="space-y-4">
-                {weatherData?.daily?.time.map((date: string, index: number) => {
-                    const code = weatherData.daily.weather_code[index];
-                    const minTemp = weatherData.daily.temperature_2m_min[index];
-                    const maxTemp = weatherData.daily.temperature_2m_max[index];
+                {weatherSegments?.map((day: any) => {
+                    const code = day.weatherCode;
+                    const minTemp = day.minTemp;
+                    const maxTemp = day.maxTemp;
                     const Icon = getWeatherIcon(code);
                     const desc = getWeatherDescription(code);
-
-                    // Filter dates based on trip duration
-                    const currentDate = new Date(date);
-                    const startDate = new Date(tripData.startDate);
-                    const endDate = new Date(tripData.endDate);
-
-                    // Reset hours for accurate comparison
-                    currentDate.setHours(0, 0, 0, 0);
-                    startDate.setHours(0, 0, 0, 0);
-                    endDate.setHours(0, 0, 0, 0);
-
-                    if (currentDate < startDate || currentDate > endDate) {
-                        return null;
-                    }
+                    const currentDate = new Date(day.date);
 
                     // Simple date formatting
                     const dateStr = currentDate.toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric', weekday: 'short' });
 
                     return (
-                        <div key={date} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div key={day.date} className={`relative p-5 rounded-3xl shadow-sm border flex items-center justify-between overflow-hidden ${day.isHistorical ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-100'}`}>
+
                             <div className="flex items-center space-x-4">
-                                <div className="bg-blue-50 p-3 rounded-2xl">
-                                    <Icon className="w-6 h-6 text-sub-title" />
+                                <div className={`p-3 rounded-2xl ${day.isHistorical ? 'bg-gray-200 grayscale' : 'bg-blue-50'}`}>
+                                    <Icon className={`w-6 h-6 ${day.isHistorical ? 'text-gray-500' : 'text-sub-title'}`} />
                                 </div>
                                 <div>
-                                    <p className="font-bold text-gray-900">{dateStr}</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className={`font-bold ${day.isHistorical ? 'text-gray-600' : 'text-gray-900'}`}>{dateStr}</p>
+                                        {day.isHistorical && (
+                                            <div title="歷史推估">
+                                                <HistoricalIcon />
+                                            </div>
+                                        )}
+                                    </div>
                                     <p className="text-sm text-gray-500">{desc}</p>
                                 </div>
                             </div>
                             <div className="text-right">
-                                <span className="text-xl font-bold text-gray-800">{maxTemp}°</span>
+                                <span className={`text-xl font-bold ${day.isHistorical ? 'text-gray-600' : 'text-gray-800'}`}>{maxTemp}°</span>
                                 <span className="text-sm text-gray-400 ml-1">/ {minTemp}°</span>
                             </div>
                         </div>
                     );
                 })}
             </div>
+
+            <div className="bg-blue-50 p-4 rounded-xl flex gap-3 text-sm text-blue-700/80">
+                <Info className="w-5 h-5 shrink-0" />
+                <p>只有近期約 14 天內為準確預報。較遠日期的天氣顯示為「去年同期」，僅供參考氣溫穿搭。</p>
+            </div>
+
             <p className="text-center text-xs text-gray-300 mt-8">Weather data by Open-Meteo.com</p>
         </div>
     );
