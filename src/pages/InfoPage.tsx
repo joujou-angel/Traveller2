@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { Loader2, Edit, Plane, Hotel, Users, Plus, X, Save, ArrowLeft, Maximize2, Share2 } from 'lucide-react';
+import { Plane, Hotel, Plus, X, Loader2, Save, Maximize2, Edit, ArrowLeft } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -16,6 +16,15 @@ type FlightSegment = {
     to: string;
 };
 
+
+type Hotel = {
+    name: string;
+    address: string;
+    addressLocal: string;
+    phone: string;
+    notes: string;
+};
+
 type TripConfig = {
     id: number;
     flight_info: {
@@ -27,15 +36,10 @@ type TripConfig = {
         outbound?: string;
         inbound?: string;
     };
-    hotel_info: {
-        name?: string;
-        address?: string; // English/Display
-        addressLocal?: string; // Local language for driver
-        phone?: string;
-        notes?: string;
-    };
+    hotel_info: Hotel[] | Hotel; // Support legacy object or new array
     companions: string[];
 };
+
 
 const fetchTripConfig = async (tripId: string): Promise<TripConfig | null> => {
     const { data, error } = await supabase
@@ -62,6 +66,7 @@ const InfoPage = () => {
     const queryClient = useQueryClient();
     const [isEditing, setIsEditing] = useState(false);
     const [showAddressZoom, setShowAddressZoom] = useState(false);
+    const [zoomAddress, setZoomAddress] = useState('');
 
     // Form State
     const [destination, setDestination] = useState('');
@@ -72,15 +77,11 @@ const InfoPage = () => {
     const [flights, setFlights] = useState<FlightSegment[]>([]);
 
     // Hotel State
-    const [hotelName, setHotelName] = useState('');
-    const [hotelAddress, setHotelAddress] = useState('');
-    const [hotelAddressLocal, setHotelAddressLocal] = useState('');
-    const [hotelPhone, setHotelPhone] = useState('');
-    const [hotelNotes, setHotelNotes] = useState('');
+    const [hotels, setHotels] = useState<Hotel[]>([]);
 
     // Companion State
-    const [companions, setCompanions] = useState<string[]>([]);
-    const [newCompanion, setNewCompanion] = useState('');
+
+
 
     const { data: tripConfig, isLoading } = useQuery({
         queryKey: ['tripConfig', tripId],
@@ -116,19 +117,27 @@ const InfoPage = () => {
             }
             setFlights(loadedFlights);
 
-            setHotelName(tripConfig.hotel_info?.name || '');
-            setHotelAddress(tripConfig.hotel_info?.address || '');
-            setHotelAddressLocal(tripConfig.hotel_info?.addressLocal || '');
-            setHotelPhone(tripConfig.hotel_info?.phone || '');
-            setHotelNotes(tripConfig.hotel_info?.notes || '');
+            setFlights(loadedFlights);
 
-            let loadedCompanions = tripConfig.companions || [];
-            // If companions list is empty AND I am the owner, default to myself
-            if (loadedCompanions.length === 0 && tripMetadata?.user_id && user?.id && tripMetadata.user_id === user.id) {
-                const ownerName = user.user_metadata?.name || user.email?.split('@')[0] || 'Owner';
-                loadedCompanions = [ownerName];
+            // Handle Hotel Data (Array or Single Object)
+            let loadedHotels: Hotel[] = [];
+            if (tripConfig.hotel_info) {
+                if (Array.isArray(tripConfig.hotel_info)) {
+                    loadedHotels = tripConfig.hotel_info;
+                } else {
+                    // Legacy single object
+                    loadedHotels = [{
+                        name: tripConfig.hotel_info.name || '',
+                        address: tripConfig.hotel_info.address || '',
+                        addressLocal: tripConfig.hotel_info.addressLocal || '',
+                        phone: tripConfig.hotel_info.phone || '',
+                        notes: tripConfig.hotel_info.notes || ''
+                    }];
+                }
             }
-            setCompanions(loadedCompanions);
+            setHotels(loadedHotels);
+
+
         }
     }, [tripConfig, tripMetadata, user]);
 
@@ -145,6 +154,7 @@ const InfoPage = () => {
                 configId = newRow.id;
             }
 
+
             // Update trip_config
             const { error } = await supabase
                 .from('trip_config')
@@ -155,17 +165,11 @@ const InfoPage = () => {
                         endDate,
                         flights
                     },
-                    hotel_info: {
-                        name: hotelName,
-                        address: hotelAddress,
-                        addressLocal: hotelAddressLocal,
-                        phone: hotelPhone,
-                        notes: hotelNotes
-                    },
-                    companions,
+                    hotel_info: hotels,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', configId);
+
 
             if (error) throw error;
 
@@ -209,25 +213,20 @@ const InfoPage = () => {
         setFlights(newFlights);
     };
 
-    const handleAddCompanion = () => {
-        const name = newCompanion.trim();
-        if (!name) return;
-        const forbidden = ['me', 'myself', '自分', '我'];
-        if (forbidden.includes(name.toLowerCase())) {
-            toast.error('請輸入具體名字，不要使用 "Me" 或 "我"');
-            return;
-        }
-        if (companions.includes(name)) {
-            toast.error('名字已存在');
-            return;
-        }
-        setCompanions([...companions, name]);
-        setNewCompanion('');
+    const handleAddHotel = () => {
+        setHotels([...hotels, { name: '', address: '', addressLocal: '', phone: '', notes: '' }]);
     };
 
-    const removeCompanion = (index: number) => {
-        setCompanions(companions.filter((_, i) => i !== index));
+    const handleRemoveHotel = (index: number) => {
+        setHotels(hotels.filter((_, i) => i !== index));
     };
+
+    const handleHotelChange = (index: number, field: keyof Hotel, value: string) => {
+        const newHotels = [...hotels];
+        newHotels[index] = { ...newHotels[index], [field]: value };
+        setHotels(newHotels);
+    };
+
 
     if (isLoading) {
         return (
@@ -249,7 +248,7 @@ const InfoPage = () => {
                     >
                         <h3 className="text-gray-400 mb-4 text-sm font-bold uppercase tracking-wider">Show to Driver</h3>
                         <p className="text-white text-4xl font-bold leading-relaxed max-w-lg break-words whitespace-pre-wrap">
-                            {hotelAddressLocal || hotelAddress}
+                            {zoomAddress}
                         </p>
                         <p className="text-gray-500 mt-8 text-sm">(Tap anywhere to close)</p>
                     </div>
@@ -320,74 +319,53 @@ const InfoPage = () => {
                             </div>
                             <h3 className="font-bold text-gray-800">住宿資訊</h3>
                         </div>
-                        <div className="space-y-4">
-                            <div>
-                                <p className="text-lg font-bold text-gray-800">{hotelName || '未設定住宿'}</p>
-                                <p className="text-sm text-gray-500 mt-1">{hotelAddress}</p>
-                            </div>
-                            {hotelAddressLocal && (
-                                <div className="p-3 bg-yellow-50 rounded-xl border border-yellow-100 flex items-center justify-between gap-3 cursor-pointer hover:bg-yellow-100 transition-colors"
-                                    onClick={() => setShowAddressZoom(true)}
-                                >
-                                    <div className="flex-1">
-                                        <p className="text-xs text-yellow-600/70 font-bold mb-1 uppercase">Local Address</p>
-                                        <p className="text-base font-bold text-gray-800 leading-tight">{hotelAddressLocal}</p>
+                        {hotels.length > 0 ? (
+                            <div className="space-y-8 divide-y divide-gray-100">
+                                {hotels.map((hotel, idx) => (
+                                    <div key={idx} className={idx > 0 ? "pt-6" : ""}>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <p className="text-lg font-bold text-gray-800">{hotel.name || '未設定住宿'}</p>
+                                                <p className="text-sm text-gray-500 mt-1">{hotel.address}</p>
+                                            </div>
+                                            {hotel.addressLocal && (
+                                                <div className="p-3 bg-yellow-50 rounded-xl border border-yellow-100 flex items-center justify-between gap-3 cursor-pointer hover:bg-yellow-100 transition-colors"
+                                                    onClick={() => {
+                                                        setZoomAddress(hotel.addressLocal || hotel.address);
+                                                        setShowAddressZoom(true)
+                                                    }}
+                                                >
+                                                    <div className="flex-1">
+                                                        <p className="text-xs text-yellow-600/70 font-bold mb-1 uppercase">Local Address</p>
+                                                        <p className="text-base font-bold text-gray-800 leading-tight">{hotel.addressLocal}</p>
+                                                    </div>
+                                                    <Maximize2 className="w-5 h-5 text-yellow-600" />
+                                                </div>
+                                            )}
+
+                                            {(hotel.phone || hotel.notes) && (
+                                                <div className="p-4 bg-gray-50 rounded-2xl space-y-3">
+                                                    {hotel.phone && (
+                                                        <div>
+                                                            <p className="text-xs text-gray-400 font-bold uppercase mb-1">Phone</p>
+                                                            <a href={`tel:${hotel.phone}`} className="text-gray-800 font-medium hover:text-blue-600 transition-colors">{hotel.phone}</a>
+                                                        </div>
+                                                    )}
+                                                    {hotel.notes && (
+                                                        <div>
+                                                            <p className="text-xs text-gray-400 font-bold uppercase mb-1">Notes</p>
+                                                            <p className="text-gray-600 text-sm whitespace-pre-wrap leading-relaxed">{hotel.notes}</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                    <Maximize2 className="w-5 h-5 text-yellow-600" />
-                                </div>
-                            )}
-
-                            {(hotelPhone || hotelNotes) && (
-                                <div className="p-4 bg-gray-50 rounded-2xl space-y-3">
-                                    {hotelPhone && (
-                                        <div>
-                                            <p className="text-xs text-gray-400 font-bold uppercase mb-1">Phone</p>
-                                            <a href={`tel:${hotelPhone}`} className="text-gray-800 font-medium hover:text-blue-600 transition-colors">{hotelPhone}</a>
-                                        </div>
-                                    )}
-                                    {hotelNotes && (
-                                        <div>
-                                            <p className="text-xs text-gray-400 font-bold uppercase mb-1">Notes</p>
-                                            <p className="text-gray-600 text-sm whitespace-pre-wrap leading-relaxed">{hotelNotes}</p>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Companions */}
-                    <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-4">
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-gray-50 rounded-xl">
-                                    <Users className="w-5 h-5 text-gray-600" />
-                                </div>
-                                <h3 className="font-bold text-gray-800">旅伴 ({companions.length})</h3>
+                                ))}
                             </div>
-                            <button
-                                onClick={() => {
-                                    const link = `${window.location.origin}/join/${tripId}`;
-                                    navigator.clipboard.writeText(link);
-                                    toast.success('Link copied! Share it with friends');
-                                }}
-                                className="bg-btn/10 text-btn px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 hover:bg-btn/20 transition-colors"
-                            >
-                                <Share2 className="w-3 h-3" />
-                                Invite
-                            </button>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                            {companions.length > 0 ? (
-                                companions.map((c, i) => (
-                                    <span key={i} className="px-4 py-2 bg-gray-50 text-gray-700 font-medium rounded-xl text-sm border border-gray-100">
-                                        {c}
-                                    </span>
-                                ))
-                            ) : (
-                                <p className="text-gray-400 text-sm">點擊編輯新增旅伴</p>
-                            )}
-                        </div>
+                        ) : (
+                            <p className="text-gray-400 text-sm italic">未設定住宿</p>
+                        )}
                     </div>
                 </div>
             </div>
@@ -495,91 +473,70 @@ const InfoPage = () => {
 
                 {/* Hotel Section */}
                 <section className="space-y-4">
-                    <h3 className="text-sm font-bold text-gray-400 tracking-wider uppercase">HOTEL</h3>
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-600">飯店名稱</label>
-                            <input
-                                value={hotelName}
-                                onChange={(e) => setHotelName(e.target.value)}
-                                placeholder="Hotel Name"
-                                className="w-full p-4 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-600">地址 (English/Display)</label>
-                            <input
-                                value={hotelAddress}
-                                onChange={(e) => setHotelAddress(e.target.value)}
-                                placeholder="Address for display"
-                                className="w-full p-4 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black text-sm"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-600">當地語言地址 (For Driver)</label>
-                            <textarea
-                                value={hotelAddressLocal}
-                                onChange={(e) => setHotelAddressLocal(e.target.value)}
-                                placeholder="例：東京都新宿区..."
-                                rows={2}
-                                className="w-full p-4 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black text-sm resize-none"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-600">電話 (Phone)</label>
-                            <input
-                                value={hotelPhone}
-                                onChange={(e) => setHotelPhone(e.target.value)}
-                                placeholder="+81 3-1234-5678"
-                                className="w-full p-4 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black text-sm"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-600">備註 (Notes)</label>
-                            <textarea
-                                value={hotelNotes}
-                                onChange={(e) => setHotelNotes(e.target.value)}
-                                placeholder="備註事項..."
-                                rows={3}
-                                className="w-full p-4 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black text-sm resize-none"
-                            />
-                        </div>
+                    <div className="flex justify-between items-center">
+                        <h3 className="text-sm font-bold text-gray-400 tracking-wider uppercase">HOTEL</h3>
+                        <button onClick={handleAddHotel} className="bg-black text-white text-xs px-3 py-1 rounded-full font-bold flex items-center gap-1">
+                            <Plus className="w-3 h-3" /> Add
+                        </button>
+                    </div>
+                    <div className="space-y-6">
+                        {hotels.map((hotel, idx) => (
+                            <div key={idx} className="p-4 rounded-2xl border border-gray-200 relative space-y-4">
+                                <button onClick={() => handleRemoveHotel(idx)} className="absolute top-2 right-2 text-gray-300 hover:text-red-500">
+                                    <X className="w-4 h-4" />
+                                </button>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-600">飯店名稱</label>
+                                    <input
+                                        value={hotel.name}
+                                        onChange={(e) => handleHotelChange(idx, 'name', e.target.value)}
+                                        placeholder="Hotel Name"
+                                        className="w-full p-4 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-600">地址 (English/Display)</label>
+                                    <input
+                                        value={hotel.address}
+                                        onChange={(e) => handleHotelChange(idx, 'address', e.target.value)}
+                                        placeholder="Address for display"
+                                        className="w-full p-4 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black text-sm"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-600">當地語言地址 (For Driver)</label>
+                                    <textarea
+                                        value={hotel.addressLocal}
+                                        onChange={(e) => handleHotelChange(idx, 'addressLocal', e.target.value)}
+                                        placeholder="例：東京都新宿区..."
+                                        rows={2}
+                                        className="w-full p-4 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black text-sm resize-none"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-600">電話 (Phone)</label>
+                                    <input
+                                        value={hotel.phone}
+                                        onChange={(e) => handleHotelChange(idx, 'phone', e.target.value)}
+                                        placeholder="+81 3-1234-5678"
+                                        className="w-full p-4 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black text-sm"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-600">備註 (Notes)</label>
+                                    <textarea
+                                        value={hotel.notes}
+                                        onChange={(e) => handleHotelChange(idx, 'notes', e.target.value)}
+                                        placeholder="備註事項..."
+                                        rows={3}
+                                        className="w-full p-4 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black text-sm resize-none"
+                                    />
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </section>
 
-                {/* Companions Section */}
-                <section className="space-y-4">
-                    <h3 className="text-sm font-bold text-gray-400 tracking-wider uppercase">COMPANIONS</h3>
-                    <div className="space-y-3">
-                        <div className="flex gap-2">
-                            <input
-                                value={newCompanion}
-                                onChange={(e) => setNewCompanion(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && handleAddCompanion()}
-                                placeholder="輸入名字..."
-                                className="flex-1 p-3 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black"
-                            />
-                            <button
-                                onClick={handleAddCompanion}
-                                className="p-3 bg-black text-white rounded-2xl active:scale-95 transition-transform"
-                            >
-                                <Plus className="w-6 h-6" />
-                            </button>
-                        </div>
-
-                        <div className="flex flex-wrap gap-2">
-                            {companions.map((c, i) => (
-                                <span key={i} className="pl-3 pr-2 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 flex items-center gap-2">
-                                    {c}
-                                    <button onClick={() => removeCompanion(i)} className="text-gray-400 hover:text-red-500">
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                </span>
-                            ))}
-                        </div>
-                        <p className="text-xs text-gray-400">*請使用真實名字，請勿使用 "Me" 以避免分帳混淆</p>
-                    </div>
-                </section>
             </div>
 
             {/* Save Button */}

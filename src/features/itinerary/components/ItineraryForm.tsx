@@ -80,7 +80,7 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
 
                 <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Time */}
                         <div className="space-y-1">
                             <label className="text-xs font-bold text-[#554030] ml-1 flex items-center gap-1">

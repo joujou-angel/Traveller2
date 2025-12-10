@@ -21,7 +21,7 @@ type Expense = {
     split_details: any;
 };
 
-const SUPPORTED_CURRENCIES = ['TWD', 'JPY', 'KRW', 'USD', 'CNY', 'THB'];
+const SUPPORTED_CURRENCIES = ['TWD', 'JPY', 'KRW', 'USD', 'CNY', 'THB', 'VND'];
 
 const fetchTripConfig = async (tripId: string): Promise<TripConfig | null> => {
     const { data, error } = await supabase

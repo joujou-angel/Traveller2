@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import { Plus, Calendar, MapPin, ChevronRight, LogOut, Edit2, X, Loader2, Trash2, Crown, Users, Plane, Save } from 'lucide-react';
+import { Plus, Calendar, MapPin, LogOut, Edit2, X, Loader2, Trash2, Crown, Save, Share2, ImageIcon, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { TravellerLogo } from '../components/TravellerLogo';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { format } from 'date-fns';
@@ -16,6 +17,7 @@ type Trip = {
     start_date: string; // Real DB column
     end_date: string;   // Real DB column
     user_id: string;    // Owner ID
+    trip_config?: { companions: string[] } | { companions: string[] }[]; // Handle potential array return
 };
 
 const TripListPage = () => {
@@ -24,6 +26,9 @@ const TripListPage = () => {
     const queryClient = useQueryClient();
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
+    const [editCompanions, setEditCompanions] = useState<string[]>([]);
+    const [newCompanion, setNewCompanion] = useState('');
+    const [showPhotoInput, setShowPhotoInput] = useState(false);
 
     // Fetch Trips from Supabase
     const { data: trips, isLoading } = useQuery({
@@ -33,7 +38,7 @@ const TripListPage = () => {
             // Just select * from trips and let Supabase filter it for us.
             const { data, error } = await supabase
                 .from('trips')
-                .select('*')
+                .select('*, trip_config(companions)')
                 .order('start_date', { ascending: true });
 
             if (error) throw error;
@@ -83,7 +88,7 @@ const TripListPage = () => {
     });
 
     const updateTripMutation = useMutation({
-        mutationFn: async (updatedTrip: { id: string; name: string; cover_image: string; location: string; start_date: string; end_date: string }) => {
+        mutationFn: async (updatedTrip: { id: string; name: string; cover_image: string; location: string; start_date: string; end_date: string; companions: string[] }) => {
             // 1. Update 'trips' table
             const { error: tripError } = await supabase
                 .from('trips')
@@ -116,7 +121,10 @@ const TripListPage = () => {
 
                 const { error: configUpdateError } = await supabase
                     .from('trip_config')
-                    .update({ flight_info: newFlightInfo })
+                    .update({
+                        flight_info: newFlightInfo,
+                        companions: updatedTrip.companions
+                    })
                     .eq('trip_id', updatedTrip.id);
 
                 if (configUpdateError) console.error('Failed to sync trip_config:', configUpdateError);
@@ -138,6 +146,18 @@ const TripListPage = () => {
     const handleEditClick = (e: React.MouseEvent, trip: Trip) => {
         e.stopPropagation(); // Prevent navigating to trip details
         setEditingTrip(trip);
+        // Safely extract companions
+        let currentCompanions: string[] = [];
+        if (trip.trip_config) {
+            if (Array.isArray(trip.trip_config)) {
+                if (trip.trip_config.length > 0) currentCompanions = trip.trip_config[0].companions || [];
+            } else {
+                currentCompanions = trip.trip_config.companions || [];
+            }
+        }
+        // If empty and I am owner, maybe default to me? Logic exists in InfoPage but for editing let's just show what's there.
+        setEditCompanions(currentCompanions);
+        setShowPhotoInput(false);
         setIsEditModalOpen(true);
     };
 
@@ -149,8 +169,29 @@ const TripListPage = () => {
             cover_image: editingTrip.cover_image,
             location: editingTrip.location,
             start_date: editingTrip.start_date,
-            end_date: editingTrip.end_date
+            end_date: editingTrip.end_date,
+            companions: editCompanions
         });
+    };
+
+    const handleAddCompanion = () => {
+        const name = newCompanion.trim();
+        if (!name) return;
+        const forbidden = ['me', 'myself', '自分', '我'];
+        if (forbidden.includes(name.toLowerCase())) {
+            toast.error('Please use a specific name');
+            return;
+        }
+        if (editCompanions.includes(name)) {
+            toast.error('Name already exists');
+            return;
+        }
+        setEditCompanions([...editCompanions, name]);
+        setNewCompanion('');
+    };
+
+    const removeCompanion = (index: number) => {
+        setEditCompanions(editCompanions.filter((_, i) => i !== index));
     };
 
     const handleDelete = () => {
@@ -240,9 +281,7 @@ const TripListPage = () => {
                     {/* Brand Area */}
                     <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2 mb-1">
-                            <div className="w-10 h-10 bg-btn rounded-xl flex items-center justify-center text-white shadow-sm shadow-orange-100">
-                                <Plane className="w-6 h-6 -rotate-45 ml-0.5 mt-0.5" />
-                            </div>
+                            <TravellerLogo className="w-12 h-12" />
                             <h1 className="text-2xl font-bold text-page-title tracking-tight">Traveller</h1>
                         </div>
                         <p className="text-[10px] text-sub-title font-medium tracking-widest pl-1">
@@ -283,51 +322,113 @@ const TripListPage = () => {
                             <div
                                 key={trip.id}
                                 onClick={() => navigate(`/trips/${trip.id}/itinerary`)}
-                                className="group bg-white rounded-3xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer border border-transparent hover:border-btn/30 active:scale-98 relative"
+                                className="group bg-white rounded-3xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer border border-transparent hover:border-btn/30 active:scale-98"
                             >
-                                {/* Edit Button */}
-                                <button
-                                    onClick={(e) => handleEditClick(e, trip)}
-                                    className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-btn hover:text-white text-gray-400"
-                                >
-                                    <Edit2 className="w-4 h-4" />
-                                </button>
-
                                 <div className="flex gap-4">
-                                    <div className="w-24 h-24 rounded-2xl bg-gray-200 shrink-0 overflow-hidden relative">
+                                    {/* Cover Image - Smaller size */}
+                                    <div className="w-16 h-16 rounded-2xl bg-gray-200 shrink-0 overflow-hidden shadow-inner">
                                         {trip.cover_image ? (
-                                            <img src={trip.cover_image} alt={trip.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                            <img src={trip.cover_image} alt={trip.name} className="w-full h-full object-cover" />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-300">
-                                                <MapPin className="w-8 h-8" />
+                                            <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                                                <Calendar className="w-6 h-6 text-gray-300" />
                                             </div>
                                         )}
                                     </div>
-                                    <div className="flex-1 flex flex-col justify-center py-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <h3 className="text-lg font-bold text-gray-800 leading-tight">{trip.name}</h3>
-                                            {trip.user_id === user?.id ? (
-                                                <Crown className="w-3 h-3 text-yellow-500 fill-yellow-500 shrink-0" />
-                                            ) : (
-                                                <Users className="w-3 h-3 text-blue-500 fill-blue-500 shrink-0" />
+
+                                    <div className="flex-1 min-w-0">
+                                        {/* Title Area */}
+                                        <div className="flex justify-between items-center mb-2">
+                                            <h3 className="font-bold text-gray-800 text-lg truncate pr-2">{trip.name}</h3>
+                                            {trip.user_id === user?.id && (
+                                                <div className="bg-yellow-100 p-1.5 rounded-full shrink-0">
+                                                    <Crown className="w-3 h-3 text-yellow-600 fill-yellow-600" />
+                                                </div>
                                             )}
                                         </div>
-                                        <div className="flex items-center gap-1.5 text-gray-400 text-xs font-medium mb-2">
-                                            <MapPin className="w-3 h-3" />
-                                            {trip.location || 'No Location'}
-                                        </div>
-                                        {(trip.start_date && trip.end_date) && (
-                                            <div className="flex items-center gap-1.5 text-date-selected-text text-xs font-bold bg-date-selected-bg w-fit px-2 py-1 rounded-lg">
-                                                <Calendar className="w-3 h-3" />
-                                                {format(new Date(trip.start_date), 'MMM d')} - {format(new Date(trip.end_date), 'MMM d')}
+
+                                        {/* Dashed Separator */}
+                                        <div className="border-b border-dashed border-gray-200 mb-2"></div>
+
+                                        {/* Details */}
+                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                                            <div className="flex items-center gap-1.5 text-gray-500">
+                                                <MapPin className="w-3.5 h-3.5" />
+                                                <span className="text-sm font-medium">{trip.location}</span>
                                             </div>
-                                        )}
-                                    </div>
-                                    <div className="flex items-center text-gray-300">
-                                        <ChevronRight className="w-5 h-5" />
+                                            <div className="flex items-center gap-1.5 text-gray-400">
+                                                <Calendar className="w-3.5 h-3.5" />
+                                                <span className="text-xs font-mono">
+                                                    {format(new Date(trip.start_date), 'MM/dd')} - {format(new Date(trip.end_date), 'MM/dd')}
+
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Bottom Row: Members & Actions */}
+                                        <div className="flex justify-between items-end mt-2">
+                                            {/* Members */}
+                                            <div className="flex items-center">
+                                                <div className="flex -space-x-2">
+                                                    {(() => {
+                                                        let comps: string[] = [];
+                                                        if (trip.trip_config) {
+                                                            if (Array.isArray(trip.trip_config)) comps = trip.trip_config[0]?.companions || [];
+                                                            else comps = trip.trip_config.companions || [];
+                                                        }
+                                                        const displayComps = comps.slice(0, 3);
+                                                        const remaining = comps.length - 3;
+                                                        return (
+                                                            <>
+                                                                {displayComps.map((c, i) => (
+                                                                    <div key={i} className="w-7 h-7 rounded-full bg-btn text-white text-[10px] font-bold flex items-center justify-center border-2 border-white ring-1 ring-gray-50 uppercase shadow-sm">
+                                                                        {c.substring(0, 1)}
+                                                                    </div>
+                                                                ))}
+                                                                {remaining > 0 && (
+                                                                    <div className="w-7 h-7 rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold flex items-center justify-center border-2 border-white ring-1 ring-gray-50 shadow-sm">
+                                                                        +{remaining}
+                                                                    </div>
+                                                                )}
+                                                            </>
+                                                        )
+                                                    })()}
+                                                </div>
+                                                {(() => {
+                                                    let count = 0;
+                                                    if (trip.trip_config) {
+                                                        if (Array.isArray(trip.trip_config)) count = trip.trip_config[0]?.companions?.length || 0;
+                                                        else count = trip.trip_config.companions?.length || 0;
+                                                    }
+                                                    return count === 0 ? <span className="text-xs text-gray-300 ml-1 italic">No members</span> : null;
+                                                })()}
+                                            </div>
+
+                                            {/* Actions Buttons */}
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        const link = `${window.location.origin}/join/${trip.id}`;
+                                                        navigator.clipboard.writeText(link);
+                                                        toast.success('Link copied!');
+                                                    }}
+                                                    className="p-2 text-gray-400 hover:text-btn hover:bg-orange-50 rounded-xl transition-colors"
+                                                >
+                                                    <Share2 className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={(e) => handleEditClick(e, trip)}
+                                                    className="p-2 text-gray-400 hover:text-btn hover:bg-orange-50 rounded-xl transition-colors"
+                                                >
+                                                    <Edit2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+
                         ))}
 
                     </div>
@@ -473,32 +574,92 @@ const TripListPage = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-bold text-[#554030] mb-1">Cover Image URL</label>
-                                    <input
-                                        type="text"
-                                        value={editingTrip.cover_image}
-                                        onChange={(e) => setEditingTrip({ ...editingTrip, cover_image: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-xl bg-white border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] transition-all font-medium text-[#342b14] text-sm"
-                                    />
-                                    {editingTrip.cover_image && (
-                                        <div className="mt-2 h-32 rounded-xl overflow-hidden bg-gray-100 border border-[#e8e3de]">
-                                            <img src={editingTrip.cover_image} alt="Preview" className="w-full h-full object-cover" />
+                                    <label className="block text-sm font-bold text-[#554030] mb-1">Cover Image</label>
+                                    {!showPhotoInput ? (
+                                        <div
+                                            className="relative h-32 rounded-xl overflow-hidden bg-gray-100 border border-[#e8e3de] group cursor-pointer"
+                                            onClick={() => setShowPhotoInput(true)}
+                                        >
+                                            {editingTrip.cover_image ? (
+                                                <img src={editingTrip.cover_image} alt="Preview" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="flex items-center justify-center h-full text-gray-400">
+                                                    <ImageIcon className="w-8 h-8" />
+                                                </div>
+                                            )}
+                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <p className="text-white font-bold text-sm flex items-center gap-1">
+                                                    <Edit2 className="w-4 h-4" /> Change Photo
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={editingTrip.cover_image}
+                                                onChange={(e) => setEditingTrip({ ...editingTrip, cover_image: e.target.value })}
+                                                placeholder="https://..."
+                                                className="flex-1 px-4 py-3 rounded-xl bg-white border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] transition-all font-medium text-[#342b14] text-sm"
+                                                autoFocus
+                                            />
+                                            <button
+                                                onClick={() => setShowPhotoInput(false)}
+                                                className="p-3 bg-gray-100 rounded-xl hover:bg-gray-200"
+                                            >
+                                                <Check className="w-5 h-5 text-gray-600" />
+                                            </button>
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Companions Management */}
+                                <div>
+                                    <label className="block text-sm font-bold text-[#554030] mb-2">Companions</label>
+                                    <div className="space-y-3">
+                                        <div className="flex gap-2">
+                                            <input
+                                                value={newCompanion}
+                                                onChange={(e) => setNewCompanion(e.target.value)}
+                                                onKeyDown={(e) => e.key === 'Enter' && handleAddCompanion()}
+                                                placeholder="Add name..."
+                                                className="flex-1 px-3 py-2 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-btn focus:ring-2 focus:ring-btn/20 outline-none text-sm"
+                                            />
+                                            <button
+                                                onClick={handleAddCompanion}
+                                                type="button"
+                                                className="p-2 bg-black text-white rounded-xl active:scale-95 transition-transform"
+                                            >
+                                                <Plus className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {editCompanions.map((c, i) => (
+                                                <span key={i} className="pl-3 pr-2 py-1.5 bg-gray-50 text-gray-700 font-medium rounded-lg text-xs border border-gray-100 flex items-center gap-2">
+                                                    {c}
+                                                    <button onClick={() => removeCompanion(i)} className="text-gray-400 hover:text-red-500">
+                                                        <X className="w-3 h-3" />
+                                                    </button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="flex gap-3 pt-2">
+                            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-2">
                                 <button
                                     onClick={() => setIsEditModalOpen(false)}
-                                    className="flex-1 py-3 px-4 rounded-xl font-bold text-[#a39992] bg-white border border-[#e8e3de] hover:bg-gray-50 transition-colors flex items-center justify-center shadow-sm"
+                                    className="w-14 h-14 rounded-2xl font-bold text-[#a39992] bg-white border border-[#e8e3de] hover:bg-gray-50 transition-colors flex items-center justify-center shadow-sm"
+                                    title="Cancel"
                                 >
                                     <X className="w-6 h-6" />
                                 </button>
                                 <button
                                     onClick={handleDelete}
-                                    disabled={deleteTripMutation.isPending}
-                                    className="flex-1 py-3 px-4 bg-red-50 text-red-500 rounded-xl font-bold hover:bg-red-100 transition-colors disabled:opacity-50 flex items-center justify-center shadow-sm"
+                                    disabled={deleteTripMutation.isPending || leaveTripMutation.isPending}
+                                    className="w-14 h-14 bg-red-50 text-red-500 rounded-2xl font-bold hover:bg-red-100 transition-colors disabled:opacity-50 flex items-center justify-center shadow-sm"
+                                    title="Delete Trip"
                                 >
                                     {deleteTripMutation.isPending || leaveTripMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : (
                                         editingTrip.user_id === user?.id ? (
@@ -508,15 +669,14 @@ const TripListPage = () => {
                                         )
                                     )}
                                 </button>
-                                <div className="flex justify-end pt-4">
-                                    <button
-                                        onClick={handleSave}
-                                        disabled={updateTripMutation.isPending}
-                                        className="flex-1 py-3 px-4 bg-[#9B8D74] text-white rounded-xl font-bold hover:bg-opacity-90 transition-all disabled:opacity-50 flex justify-center items-center gap-2 shadow-lg shadow-[#9B8D74]/20"
-                                    >
-                                        {updateTripMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : <Save className="w-6 h-6" />}
-                                    </button>
-                                </div>
+                                <button
+                                    onClick={handleSave}
+                                    disabled={updateTripMutation.isPending}
+                                    className="w-14 h-14 bg-[#9B8D74] text-white rounded-2xl font-bold hover:bg-opacity-90 transition-all disabled:opacity-50 flex justify-center items-center shadow-lg shadow-[#9B8D74]/20"
+                                    title="Save Changes"
+                                >
+                                    {updateTripMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : <Save className="w-6 h-6" />}
+                                </button>
                             </div>
                         </div>
                     </div>
