@@ -1,10 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { Loader2, Plus, Wallet, Receipt, Trash2, X, DollarSign, Calculator } from 'lucide-react';
+import { Loader2, Plus, Wallet, Receipt, Trash2, X, DollarSign, Calculator, Save } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 type TripConfig = {
     companions: string[];
@@ -42,8 +43,14 @@ const fetchExpenses = async (tripId: string): Promise<Expense[]> => {
     return data || [];
 };
 
+const fetchTripMetadata = async (tripId: string) => {
+    const { data } = await supabase.from('trips').select('user_id').eq('id', tripId).single();
+    return data;
+};
+
 const ExpensesPage = () => {
     const { tripId } = useParams();
+    const { user } = useAuth();
     const queryClient = useQueryClient();
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -72,7 +79,18 @@ const ExpensesPage = () => {
         enabled: !!tripId
     });
 
-    const companions = tripConfig?.companions || [];
+    const { data: tripMetadata } = useQuery({
+        queryKey: ['tripMetadata', tripId],
+        queryFn: () => fetchTripMetadata(tripId!),
+        enabled: !!tripId
+    });
+
+    let companions = tripConfig?.companions || [];
+    // Default to owner if empty (Mirroring InfoPage logic)
+    if (companions.length === 0 && tripMetadata?.user_id && user?.id && tripMetadata.user_id === user.id) {
+        const ownerName = user.user_metadata?.name || user.email?.split('@')[0] || 'Owner';
+        companions = [ownerName];
+    }
 
     // Initialize/Reset Form
     const openModal = () => {
@@ -444,7 +462,7 @@ const ExpensesPage = () => {
                                     disabled={addExpenseMutation.isPending || !amount || !itemName}
                                     className="w-full py-4 bg-btn text-white rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-transform disabled:opacity-50 disabled:scale-100"
                                 >
-                                    {addExpenseMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : 'Add Expense'}
+                                    {addExpenseMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : <Save className="w-6 h-6 mx-auto" />}
                                 </button>
                             </div>
                         </div>

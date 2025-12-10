@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Plus, Calendar, MapPin, ChevronRight, LogOut, Edit2, X, Loader2, Trash2, Check, Crown, Users } from 'lucide-react';
+import { Plus, Calendar, MapPin, ChevronRight, LogOut, Edit2, X, Loader2, Trash2, Crown, Users, Plane, Save } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
@@ -192,13 +192,15 @@ const TripListPage = () => {
             if (error) throw error;
 
             // Also create a default trip_config so ItineraryPage doesn't think it's unconfigured
+            const ownerName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Owner';
             await supabase.from('trip_config').insert({
                 trip_id: tripData.id,
                 flight_info: {
                     destination: data.destination,
                     startDate: data.start,
                     endDate: data.end
-                }
+                },
+                companions: [ownerName]
             });
 
             return tripData;
@@ -232,18 +234,35 @@ const TripListPage = () => {
     return (
         <div className="min-h-screen bg-page-bg pb-24">
             {/* Header */}
-            <div className="bg-white px-6 pt-12 pb-6 shadow-sm sticky top-0 z-10">
-                <div className="flex justify-between items-center mb-2">
-                    <div>
-                        <p className="text-gray-400 text-sm font-bold uppercase tracking-wider">Welcome back</p>
-                        <h1 className="text-2xl font-bold text-gray-800">{user?.user_metadata?.name || user?.email?.split('@')[0] || 'Traveller'}</h1>
+            {/* Header */}
+            <div className="bg-white px-6 pt-10 pb-6 shadow-sm sticky top-0 z-10 border-b border-gray-50">
+                <div className="flex justify-between items-start">
+                    {/* Brand Area */}
+                    <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2 mb-1">
+                            <div className="w-10 h-10 bg-btn rounded-xl flex items-center justify-center text-white shadow-sm shadow-orange-100">
+                                <Plane className="w-6 h-6 -rotate-45 ml-0.5 mt-0.5" />
+                            </div>
+                            <h1 className="text-2xl font-bold text-page-title tracking-tight">Traveller</h1>
+                        </div>
+                        <p className="text-[10px] text-sub-title font-medium tracking-widest pl-1">
+                            PLAN YOUR NEXT ADVENTURE
+                        </p>
                     </div>
-                    <button
-                        onClick={signOut}
-                        className="p-2 bg-gray-100 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                    >
-                        <LogOut className="w-5 h-5" />
-                    </button>
+
+                    {/* User Area */}
+                    <div className="flex items-center gap-4 pt-1">
+                        <div className="text-right">
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Welcome</p>
+                            <p className="text-sm font-bold text-main-title">{user?.user_metadata?.name || user?.email?.split('@')[0] || 'Guest'}</p>
+                        </div>
+                        <button
+                            onClick={signOut}
+                            className="p-2.5 bg-gray-50 border border-gray-100 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                        >
+                            <LogOut className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -383,13 +402,15 @@ const TripListPage = () => {
                                 </div>
                             </div>
 
-                            <button
-                                onClick={handleCreateTrip}
-                                disabled={createTripMutation.isPending || !newTripName.trim() || !destination.trim() || !startDate || !endDate}
-                                className="w-full py-3 px-4 bg-btn text-white rounded-xl font-bold hover:bg-opacity-90 transition-all disabled:opacity-50 flex justify-center items-center gap-2 shadow-sm"
-                            >
-                                {createTripMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : <Check className="w-6 h-6" />}
-                            </button>
+                            <div className="flex justify-end pt-4">
+                                <button
+                                    onClick={handleCreateTrip}
+                                    disabled={createTripMutation.isPending || !newTripName.trim() || !destination.trim() || !startDate || !endDate}
+                                    className="w-full py-3 px-4 bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-all disabled:opacity-50 flex justify-center items-center gap-2"
+                                >
+                                    {createTripMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : <Save className="w-6 h-6" />}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )
@@ -487,19 +508,20 @@ const TripListPage = () => {
                                         )
                                     )}
                                 </button>
-                                <button
-                                    onClick={handleSave}
-                                    disabled={updateTripMutation.isPending}
-                                    className="flex-1 py-3 px-4 bg-[#9B8D74] text-white rounded-xl font-bold hover:bg-opacity-90 transition-all disabled:opacity-50 flex justify-center items-center gap-2 shadow-lg shadow-[#9B8D74]/20"
-                                >
-                                    {updateTripMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : <Check className="w-6 h-6" />}
-                                </button>
+                                <div className="flex justify-end pt-4">
+                                    <button
+                                        onClick={handleSave}
+                                        disabled={updateTripMutation.isPending}
+                                        className="flex-1 py-3 px-4 bg-[#9B8D74] text-white rounded-xl font-bold hover:bg-opacity-90 transition-all disabled:opacity-50 flex justify-center items-center gap-2 shadow-lg shadow-[#9B8D74]/20"
+                                    >
+                                        {updateTripMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : <Save className="w-6 h-6" />}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                )
-            }
-        </div >
+                )}
+        </div>
     );
 };
 

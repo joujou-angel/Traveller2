@@ -4,6 +4,7 @@ import { Loader2, Edit, Plane, Hotel, Users, Plus, X, Save, ArrowLeft, Maximize2
 import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { useAuth } from '../context/AuthContext';
 
 // Type Definitions
 type FlightSegment = {
@@ -50,8 +51,14 @@ const fetchTripConfig = async (tripId: string): Promise<TripConfig | null> => {
     return data;
 };
 
+const fetchTripMetadata = async (tripId: string) => {
+    const { data } = await supabase.from('trips').select('user_id').eq('id', tripId).single();
+    return data;
+};
+
 const InfoPage = () => {
     const { tripId } = useParams();
+    const { user } = useAuth();
     const queryClient = useQueryClient();
     const [isEditing, setIsEditing] = useState(false);
     const [showAddressZoom, setShowAddressZoom] = useState(false);
@@ -78,6 +85,12 @@ const InfoPage = () => {
     const { data: tripConfig, isLoading } = useQuery({
         queryKey: ['tripConfig', tripId],
         queryFn: () => fetchTripConfig(tripId!),
+        enabled: !!tripId
+    });
+
+    const { data: tripMetadata } = useQuery({
+        queryKey: ['tripMetadata', tripId],
+        queryFn: () => fetchTripMetadata(tripId!),
         enabled: !!tripId
     });
 
@@ -108,9 +121,16 @@ const InfoPage = () => {
             setHotelAddressLocal(tripConfig.hotel_info?.addressLocal || '');
             setHotelPhone(tripConfig.hotel_info?.phone || '');
             setHotelNotes(tripConfig.hotel_info?.notes || '');
-            setCompanions(tripConfig.companions || []);
+
+            let loadedCompanions = tripConfig.companions || [];
+            // If companions list is empty AND I am the owner, default to myself
+            if (loadedCompanions.length === 0 && tripMetadata?.user_id && user?.id && tripMetadata.user_id === user.id) {
+                const ownerName = user.user_metadata?.name || user.email?.split('@')[0] || 'Owner';
+                loadedCompanions = [ownerName];
+            }
+            setCompanions(loadedCompanions);
         }
-    }, [tripConfig]);
+    }, [tripConfig, tripMetadata, user]);
 
     const updateMutation = useMutation({
         mutationFn: async () => {
