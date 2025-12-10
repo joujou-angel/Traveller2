@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { addDays, format, isAfter, subYears, parseISO, differenceInDays } from 'date-fns';
+import { addDays, format, isAfter, subYears, parseISO } from 'date-fns';
 
 const CITY_MAPPINGS: Record<string, string> = {
+    // International
     '首爾': 'Seoul',
     '東京': 'Tokyo',
     '大阪': 'Osaka',
@@ -12,7 +13,33 @@ const CITY_MAPPINGS: Record<string, string> = {
     '清邁': 'Chiang Mai',
     '巴黎': 'Paris',
     '倫敦': 'London',
-    '紐約': 'New York'
+    '紐約': 'New York',
+
+    // Taiwan
+    '台北': 'Taipei',
+    '臺北': 'Taipei',
+    '新北': 'New Taipei',
+    '桃園': 'Taoyuan',
+    '台中': 'Taichung',
+    '臺中': 'Taichung',
+    '台南': 'Tainan',
+    '臺南': 'Tainan',
+    '高雄': 'Kaohsiung',
+    '基隆': 'Keelung',
+    '新竹': 'Hsinchu',
+    '苗栗': 'Miaoli',
+    '彰化': 'Changhua',
+    '南投': 'Nantou',
+    '雲林': 'Yunlin',
+    '嘉義': 'Chiayi',
+    '屏東': 'Pingtung',
+    '宜蘭': 'Yilan',
+    '花蓮': 'Hualien',
+    '台東': 'Taitung',
+    '臺東': 'Taitung',
+    '澎湖': 'Penghu',
+    '金門': 'Kinmen',
+    '馬祖': 'Matsu'
 };
 
 const fetchTripConfig = async (tripId: string) => {
@@ -126,9 +153,8 @@ const fetchHybridWeather = async (lat: number, long: number, startDateStr: strin
             const data = await res.json();
 
             if (data.daily) {
-                data.daily.time.forEach((t: string, i: number) => {
+                data.daily.time.forEach((_t: string, i: number) => {
                     // Map date back to trip year for display
-                    const originalDate = addDays(parseISO(t), 365 + (differenceInDays(parseISO(t), subYears(parseISO(t), 1)) > 365 ? 1 : 0)); // simple Approx: standard year + 1. 
                     // Better: just use index to map to the requested range.
                     // Actually, simpler: we asked for X days, we get X days. mapping them to historicalStart + index.
 
