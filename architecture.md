@@ -14,7 +14,56 @@
 > [!IMPORTANT]
 > **專案根目錄 (Project Root)**：Git 儲存庫的根目錄即為 `Traveller2` 資料夾。
 > **限制 (Constraint)**：請勿更動頂層資料夾結構或將檔案移出 `Traveller2`。所有專案設定檔 (package.json, vite.config.ts 等) 必須保留在此根目錄下。
-> **部署 (Deployment)**：Vercel 設定檔 (`vercel.json`) 維持在根目錄以處理部署設定 (rewrites)，建置邏輯則交由 Vite 處理。
+
+#### 建議目錄結構 (Proposed Directory Structure)
+
+```text
+src/
+│
+├─ components/             # 可重複使用 UI（Navbar, Button, Card, Icon…）
+│   ├─ Navbar/
+│   │   ├─ Navbar.tsx
+│   │   ├─ navbar.css
+│   │   └─ index.ts
+│   ├─ Icon/
+│   │   ├─ Icon.tsx
+│   │   └─ icons/ (SVG assets)
+│   └─ ...
+│
+├─ features/               # 「每個功能」的邏輯 (Feature-First)
+│   ├─ itinerary/
+│   │   ├─ api.ts         # Supabase CRUD
+│   │   ├─ hooks.ts       # React Query hooks
+│   │   └─ components/    # 該頁面專用元件
+│   ├─ expenses/
+│   ├─ weather/
+│   ├─ assistant/
+│   └─ auth/
+│
+├─ pages/                  # 5 個頁面 (React Router)
+│   ├─ Info.tsx
+│   ├─ Itinerary.tsx
+│   ├─ Expenses.tsx
+│   ├─ Weather.tsx
+│   └─ Assistant.tsx
+│
+├─ layout/                 # 不同頁面共用的 Layout（含 Navbar）
+│   └─ MainLayout.tsx
+│
+├─ lib/
+│   ├─ supabase.ts        # Supabase client 初始化
+│   ├─ utils.ts           # 日期、金額、格式工具
+│   └─ constants.ts       # 全域常數
+│
+├─ styles/
+│   ├─ globals.css        # 全站 style
+│   └─ variables.css      # 色票、字體、間距設定
+│
+├─ main.tsx               # ReactDOM render
+└─ App.tsx                # Routes 設定入口
+```
+
+> **Note**: 原始需求使用 `.js`/`.jsx`，但本專案為 TypeScript 架構，故架構書中已調整為 `.ts`/`.tsx` 以符合現狀。
 
 ### 1.2 技術選型 (Tech Stick)
 
