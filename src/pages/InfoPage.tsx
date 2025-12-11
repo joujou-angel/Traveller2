@@ -1,10 +1,11 @@
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { Plane, Hotel, Plus, X, Loader2, Save, Maximize2, Edit, ArrowLeft } from 'lucide-react';
+import { Plane, Hotel as HotelIcon, Plus, X, Loader2, Save, Maximize2, Edit, ArrowLeft } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../features/auth/AuthContext';
 
 // Type Definitions
 type FlightSegment = {
@@ -17,7 +18,7 @@ type FlightSegment = {
 };
 
 
-type Hotel = {
+type HotelInfo = {
     name: string;
     address: string;
     addressLocal: string;
@@ -36,7 +37,7 @@ type TripConfig = {
         outbound?: string;
         inbound?: string;
     };
-    hotel_info: Hotel[] | Hotel; // Support legacy object or new array
+    hotel_info: HotelInfo[] | HotelInfo; // Support legacy object or new array
     companions: string[];
 };
 
@@ -61,6 +62,7 @@ const fetchTripMetadata = async (tripId: string) => {
 };
 
 const InfoPage = () => {
+    const { t } = useTranslation();
     const { tripId } = useParams();
     const { user } = useAuth();
     const queryClient = useQueryClient();
@@ -77,11 +79,7 @@ const InfoPage = () => {
     const [flights, setFlights] = useState<FlightSegment[]>([]);
 
     // Hotel State
-    const [hotels, setHotels] = useState<Hotel[]>([]);
-
-    // Companion State
-
-
+    const [hotels, setHotels] = useState<HotelInfo[]>([]);
 
     const { data: tripConfig, isLoading } = useQuery({
         queryKey: ['tripConfig', tripId],
@@ -117,10 +115,8 @@ const InfoPage = () => {
             }
             setFlights(loadedFlights);
 
-            setFlights(loadedFlights);
-
             // Handle Hotel Data (Array or Single Object)
-            let loadedHotels: Hotel[] = [];
+            let loadedHotels: HotelInfo[] = [];
             if (tripConfig.hotel_info) {
                 if (Array.isArray(tripConfig.hotel_info)) {
                     loadedHotels = tripConfig.hotel_info;
@@ -136,8 +132,6 @@ const InfoPage = () => {
                 }
             }
             setHotels(loadedHotels);
-
-
         }
     }, [tripConfig, tripMetadata, user]);
 
@@ -154,7 +148,6 @@ const InfoPage = () => {
                 configId = newRow.id;
             }
 
-
             // Update trip_config
             const { error } = await supabase
                 .from('trip_config')
@@ -169,7 +162,6 @@ const InfoPage = () => {
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', configId);
-
 
             if (error) throw error;
 
@@ -221,7 +213,7 @@ const InfoPage = () => {
         setHotels(hotels.filter((_, i) => i !== index));
     };
 
-    const handleHotelChange = (index: number, field: keyof Hotel, value: string) => {
+    const handleHotelChange = (index: number, field: keyof HotelInfo, value: string) => {
         const newHotels = [...hotels];
         newHotels[index] = { ...newHotels[index], [field]: value };
         setHotels(newHotels);
@@ -255,7 +247,7 @@ const InfoPage = () => {
                 )}
 
                 <header className="flex justify-between items-center">
-                    <h1 className="text-3xl font-bold text-gray-800 tracking-tight">旅程資訊</h1>
+                    <h1 className="text-3xl font-bold text-gray-800 tracking-tight">{t('info.title')}</h1>
                     <button
                         onClick={() => setIsEditing(true)}
                         className="p-2 bg-white rounded-full shadow-sm hover:shadow-md text-gray-600 transition-all border border-gray-100"
@@ -274,7 +266,7 @@ const InfoPage = () => {
                             <div className="p-2 bg-gray-50 rounded-xl">
                                 <Plane className="w-5 h-5 text-gray-600" />
                             </div>
-                            <h3 className="font-bold text-gray-800">航班資訊</h3>
+                            <h3 className="font-bold text-gray-800">{t('info.flights')}</h3>
                         </div>
                         {flights.length > 0 ? (
                             <div className="space-y-4">
@@ -315,9 +307,9 @@ const InfoPage = () => {
                     <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-4">
                         <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 bg-gray-50 rounded-xl">
-                                <Hotel className="w-5 h-5 text-gray-600" />
+                                <HotelIcon className="w-5 h-5 text-gray-600" />
                             </div>
-                            <h3 className="font-bold text-gray-800">住宿資訊</h3>
+                            <h3 className="font-bold text-gray-800">{t('info.hotels')}</h3>
                         </div>
                         {hotels.length > 0 ? (
                             <div className="space-y-8 divide-y divide-gray-100">

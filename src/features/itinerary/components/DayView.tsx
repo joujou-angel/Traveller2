@@ -2,11 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../lib/supabase';
 import ItineraryItem from './ItineraryItem';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface DayViewProps {
     tripId: string; // Add tripId
     date: string; // ISO date string YYYY-MM-DD
-    onAdd: () => void;
     onEdit: (item: any) => void;
     isReadOnly?: boolean;
 }
@@ -23,7 +23,8 @@ const fetchItineraries = async (tripId: string, date: string) => {
     return data;
 };
 
-export default function DayView({ tripId, date, onAdd, onEdit, isReadOnly = false }: DayViewProps) {
+export default function DayView({ tripId, date, onEdit, isReadOnly = false }: DayViewProps) {
+    const { t } = useTranslation();
     const queryClient = useQueryClient();
 
     // Fetch Items
@@ -70,20 +71,33 @@ export default function DayView({ tripId, date, onAdd, onEdit, isReadOnly = fals
                             onEdit={onEdit}
                             isReadOnly={isReadOnly}
                             onDelete={(id) => {
-                                if (confirm('確定要刪除這個行程嗎？')) {
+                                if (confirm(t('common.confirmDelete', 'Are you sure you want to delete this item?'))) {
                                     deleteMutation.mutate(id);
                                 }
                             }}
                         />
                     ))
                 ) : (
-                    <div className="text-center py-12 border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/50">
-                        <p className="text-gray-400 mb-2">這天還沒有行程</p>
+                    <div className="text-center py-12 border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/50 relative overflow-hidden">
+                        <p className="text-gray-400 mb-2">{t('itinerary.noItems', 'No items for this day')}</p>
 
                         {!isReadOnly && (
-                            <button onClick={onAdd} className="text-btn font-bold hover:underline">
-                                點擊新增
-                            </button>
+                            <div className="fixed bottom-40 right-8 z-30 pointer-events-none animate-bounce">
+                                <div className="relative">
+                                    <p className="absolute -top-8 -left-20 w-32 font-handwriting text-xl text-gray-500 rotate-[-12deg] text-center font-bold">
+                                        {t('itinerary.emptyStateHint', 'Start planning!')}
+                                    </p>
+                                    <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-400 transform rotate-12">
+                                        <path d="M20 20 C 40 20, 60 40, 70 80" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                                        <path d="M50 70 L 70 80 L 85 60" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                        )}
+                        {!isReadOnly && (
+                            <div className="text-gray-300 text-xs mt-2">
+                                {/* Visual cue only, no text button */}
+                            </div>
                         )}
                     </div>
                 )}

@@ -5,7 +5,8 @@ import { Loader2, Plus } from 'lucide-react';
 import DayView from '../features/itinerary/components/DayView';
 import ItineraryForm from '../features/itinerary/components/ItineraryForm';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../features/auth/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 const fetchTripConfig = async (tripId: string) => {
     const { data, error } = await supabase
@@ -21,6 +22,7 @@ const fetchTripConfig = async (tripId: string) => {
 };
 
 export default function ItineraryPage() {
+    const { t } = useTranslation();
     const { tripId } = useParams();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
@@ -54,7 +56,7 @@ export default function ItineraryPage() {
         let count = 1;
         while (current <= end && count <= 30) {
             list.push({
-                label: `Day ${count}`,
+                label: t('itinerary.day', { count }),
                 date: current.toISOString().split('T')[0], // YYYY-MM-DD
                 fullDate: new Date(current) // clone
             });
@@ -62,7 +64,7 @@ export default function ItineraryPage() {
             count++;
         }
         return list;
-    }, [tripInfo]);
+    }, [tripInfo, t]);
 
     // Mutations
     const upsertMutation = useMutation({
@@ -96,7 +98,7 @@ export default function ItineraryPage() {
         },
         onError: (error) => {
             console.error('Mutation Error:', error);
-            alert(`儲存失敗: ${error.message}`);
+            alert(`${t('common.error', 'Error')}: ${error.message}`);
         }
     });
 
@@ -138,16 +140,16 @@ export default function ItineraryPage() {
     if (error || days.length === 0) {
         return (
             <div className="p-8 text-center flex flex-col items-center justify-center h-full">
-                <h2 className="text-xl font-bold text-gray-700 mb-2">還沒有旅程設定</h2>
+                <h2 className="text-xl font-bold text-gray-700 mb-2">{t('itinerary.noTripConfig', 'No trip configuration yet')}</h2>
                 {isOwner ? (
                     <button
-                        onClick={() => navigate('/setup')}
+                        onClick={() => navigate(`/trips/${tripId}/setup`)}
                         className="bg-gray-900 text-white px-6 py-2 rounded-xl hover:bg-gray-800 transition-colors"
                     >
-                        前往設定
+                        {t('common.goToSetup', 'Go to Setup')}
                     </button>
                 ) : (
-                    <p className="text-gray-400 text-sm">請等待主辦人設定行程日期與地點</p>
+                    <p className="text-gray-400 text-sm">{t('itinerary.waitCoordinates', 'Please wait for the organizer to set dates and location')}</p>
                 )}
             </div>
         );
@@ -190,7 +192,6 @@ export default function ItineraryPage() {
                 <DayView
                     tripId={tripId!} // Pass tripId
                     date={days[activeDayIndex].date}
-                    onAdd={handleAdd}
                     onEdit={handleEdit}
                     isReadOnly={!isOwner}
                 />

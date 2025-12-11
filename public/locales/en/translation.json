@@ -1,0 +1,143 @@
+{
+    "common": {
+        "save": "Save",
+        "cancel": "Cancel",
+        "back": "Back",
+        "loading": "Loading...",
+        "delete": "Delete",
+        "edit": "Edit",
+        "notes": "Notes",
+        "clickToAdd": "Click to add",
+        "confirmDelete": "Are you sure you want to delete this item?"
+    },
+    "tripList": {
+        "subtitle": "PLAN YOUR NEXT ADVENTURE",
+        "welcome": "Welcome",
+        "myTrips": "My Trips",
+        "plans": "Plans",
+        "emptyState": "Plan your first trip here!"
+    },
+    "nav": {
+        "trips": "Trips",
+        "itinerary": "Itinerary",
+        "expenses": "Expenses",
+        "weather": "Weather",
+        "info": "Info"
+    },
+    "trip": {
+        "name": "Name",
+        "destination": "Destination",
+        "dates": "Dates",
+        "cover_image": "Cover Image",
+        "companions": "Companions",
+        "create_new": "Create New Trip",
+        "createTitle": "New Trip",
+        "tripName": "Trip Name",
+        "tripNamePlaceholder": "e.g. Kyoto Summer Trip",
+        "destinationPlaceholder": "e.g. Tokyo, Japan",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "createSuccess": "Trip created successfully!",
+        "createError": "Failed to create trip",
+        "editTrip": "Edit Trip",
+        "changePhoto": "Change Photo",
+        "addCompanionPlaceholder": "Add name...",
+        "companionExists": "Name already exists",
+        "companionInvalid": "Please use a specific name",
+        "deleteTrip": "Delete Trip",
+        "leaveTrip": "Leave Trip",
+        "confirmDeleteTrip": "Are you sure you want to delete this trip? This action cannot be undone.",
+        "confirmLeaveTrip": "Are you sure you want to leave this trip? You will need an invite to join again.",
+        "updateSuccess": "Trip updated successfully",
+        "updateError": "Failed to update trip",
+        "deleteSuccess": "Trip deleted successfully",
+        "deleteError": "Failed to delete trip",
+        "leaveSuccess": "Left trip successfully",
+        "leaveError": "Failed to leave trip",
+        "saveChanges": "Save Changes"
+    },
+    "info": {
+        "title": "Trip Info",
+        "flights": "Flights",
+        "hotels": "Accommodation"
+    },
+    "expenses": {
+        "title": "Wallet",
+        "subtitle": "",
+        "netBalances": "NET BALANCE",
+        "settled": "Settled",
+        "noCompanions": "No companions set. Add them in Info page.",
+        "totalSpent": "TOTAL SPENT",
+        "addExpenseTitle": "Add Expense",
+        "itemName": "Item Name",
+        "itemNamePlaceholder": "Dinner, Taxi, etc.",
+        "currency": "Currency",
+        "amount": "Amount",
+        "paidBy": "Paid By",
+        "splitWith": "Split With",
+        "everyone": "Everyone",
+        "people": "{{count}} People",
+        "splitDetails": "Split Details",
+        "success": "Expense added!",
+        "error": "Failed to add"
+    },
+    "weather": {
+        "errorTitle": "Unable to load weather",
+        "goToSetup": "Go to Setup",
+        "historical": "Historical Estimate",
+        "disclaimer": "Distant dates will show 'Historical Average' for reference."
+    },
+    "itinerary": {
+        "day": "Day {{count}}",
+        "noTripConfig": "No trip yet",
+        "waitCoordinates": "Please wait for the trip owner to set itinerary",
+        "noItems": "No plans yet",
+        "editItem": "Edit",
+        "addItem": "Add",
+        "time": "Time",
+        "category": "Category",
+        "locationName": "Location",
+        "locationPlaceholder": "e.g. Tokyo Tower",
+        "googleMapLink": "Google Maps Link",
+        "notesPlaceholder": "What to eat? What's special?",
+        "emptyStateHint": "Start planning!"
+    },
+    "categories": {
+        "activity": "Activity",
+        "food": "Food",
+        "transport": "Transport",
+        "stay": "Stay"
+    },
+    "setup": {
+        "errorDestination": "Please enter destination",
+        "errorStartDate": "Please select start date",
+        "errorEndDate": "Please select end date",
+        "errorDateOrder": "End date cannot be earlier than start date",
+        "saveError": "Failed to save, please try again later.",
+        "title": "Start New Adventure",
+        "subtitle": "Set your flight and dates to auto-generate itinerary",
+        "destination": "Destination",
+        "destinationPlaceholder": "e.g. Tokyo, Osaka",
+        "dates": "Dates",
+        "selectDateRange": "Select Date Range",
+        "submit": "Start Adventure"
+    },
+    "login": {
+        "failed": "Login Failed",
+        "googleError": "Unable to sign in with Google.",
+        "welcome": "Welcome Back",
+        "subtitle": "Sign in to sync your travel plans",
+        "signInGoogle": "Sign in with Google"
+    },
+    "join": {
+        "invalidLink": "Invalid Invite Link",
+        "alreadyMember": "You are already a member of this trip!",
+        "success": "Successfully joined the trip!",
+        "failed": "Failed to join trip",
+        "joining": "Joining Trip...",
+        "joiningDesc": "Please wait while we add you to the group.",
+        "welcome": "Welcome Aboard!",
+        "redirecting": "Redirecting to itinerary...",
+        "errorTitle": "Unable to Join"
+    }
+}

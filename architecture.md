@@ -38,7 +38,12 @@ src/
 │   ├─ expenses/
 │   ├─ weather/
 │   ├─ assistant/
-│   └─ auth/
+│   ├─ auth/
+│   ├─ settings/           # User Settings & i18n
+│
+│   ├─ subscription/       # [Future] Payment, Pricing, Lemon Squeezy integration
+│   ├─ portability/        # [Future] Import (Excel/AI) & Export (Notion/PDF)
+│   └─ maps/               # [Future] Shared Map Logic (Google Maps Loader, Pin Clustering)
 │
 ├─ pages/                  # 5 個頁面 (React Router)
 │   ├─ Info.tsx

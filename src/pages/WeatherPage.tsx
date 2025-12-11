@@ -2,6 +2,7 @@ import { MapPin, Loader2, AlertCircle, RefreshCw, Info } from 'lucide-react';
 import { useParams, Link } from 'react-router-dom';
 import { useTripWeather } from '../hooks/useTripWeather';
 import { getWeatherDescription, getWeatherIcon } from '../lib/weatherHelpers';
+import { useTranslation } from 'react-i18next';
 
 const HistoricalIcon = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 ml-1">
@@ -12,6 +13,7 @@ const HistoricalIcon = () => (
 );
 
 export default function WeatherPage() {
+    const { t } = useTranslation();
     const { tripId } = useParams();
 
     // Note: Use 'weatherSegments' now instead of raw weatherData
@@ -30,7 +32,7 @@ export default function WeatherPage() {
         return (
             <div className="h-full flex flex-col items-center justify-center p-8 text-gray-500">
                 <Loader2 className="w-8 h-8 animate-spin mb-2 text-sub-title" />
-                <p>正在載入天氣資訊...</p>
+                <p>{t('common.loading', 'Loading...')}</p>
             </div>
         );
     }
@@ -42,11 +44,11 @@ export default function WeatherPage() {
                 <div className="bg-red-50 p-4 rounded-full mb-4">
                     <AlertCircle className="w-8 h-8 text-red-400" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-800 mb-2">無法取得天氣</h2>
+                <h2 className="text-xl font-bold text-gray-800 mb-2">{t('weather.errorTitle', 'Unable to load weather')}</h2>
                 <p className="text-gray-500 mb-6">{(error as Error).message}</p>
                 {(error as Error).message === "尚未設定目的地" && (
                     <Link to={`/trips/${tripId}/info`} className="bg-gray-900 text-white px-6 py-2 rounded-xl font-medium">
-                        前往設定旅程
+                        {t('weather.goToSetup', 'Go to Setup')}
                     </Link>
                 )}
             </div>
@@ -82,7 +84,7 @@ export default function WeatherPage() {
                     const desc = getWeatherDescription(code);
                     const currentDate = new Date(day.date);
 
-                    // Simple date formatting
+                    // Simple date formatting (using i18n locale would be better, but keeping simple for now)
                     const dateStr = currentDate.toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric', weekday: 'short' });
 
                     return (
@@ -96,7 +98,7 @@ export default function WeatherPage() {
                                     <div className="flex items-center gap-2">
                                         <p className={`font-bold ${day.isHistorical ? 'text-gray-600' : 'text-gray-900'}`}>{dateStr}</p>
                                         {day.isHistorical && (
-                                            <div title="歷史推估">
+                                            <div title={t('weather.historical', 'Historical Estimate')}>
                                                 <HistoricalIcon />
                                             </div>
                                         )}
@@ -115,7 +117,7 @@ export default function WeatherPage() {
 
             <div className="bg-blue-50 p-4 rounded-xl flex gap-3 text-sm text-blue-700/80">
                 <Info className="w-5 h-5 shrink-0" />
-                <p>只有近期約 14 天內為準確預報。較遠日期的天氣顯示為「去年同期」，僅供參考氣溫穿搭。</p>
+                <p>{t('weather.disclaimer', 'Only near-term 14-day forecasts are accurate. Distant dates show "Historical Average" for reference.')}</p>
             </div>
 
             <p className="text-center text-xs text-gray-300 mt-8">Weather data by Open-Meteo.com</p>

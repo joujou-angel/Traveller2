@@ -8,30 +8,33 @@ import { format } from 'date-fns';
 import 'react-day-picker/dist/style.css';
 import { supabase } from '../lib/supabase';
 import { useState } from 'react';
-
-// Validation Schema
-const schema = z.object({
-    destination: z.string().min(1, "請輸入目的地"),
-    startDate: z.string().min(1, "請選擇開始日期"),
-    endDate: z.string().min(1, "請選擇結束日期"),
-}).refine((data) => {
-    if (data.startDate && data.endDate) {
-        return new Date(data.startDate) <= new Date(data.endDate);
-    }
-    return true;
-}, {
-    message: "結束日期不能早於開始日期",
-    path: ["endDate"],
-});
-
-type TripFormValues = z.infer<typeof schema>;
+import { useTranslation } from 'react-i18next';
 
 export default function TripSetupPage() {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+    // Dynamic schema based on translations isn't ideal for 'message' but acceptable.
+    // Better to use map/code in schema and translate in component, but for now simple approach:
+    const schema = z.object({
+        destination: z.string().min(1, t('setup.errorDestination', "Please enter destination")),
+        startDate: z.string().min(1, t('setup.errorStartDate', "Please select start date")),
+        endDate: z.string().min(1, t('setup.errorEndDate', "Please select end date")),
+    }).refine((data) => {
+        if (data.startDate && data.endDate) {
+            return new Date(data.startDate) <= new Date(data.endDate);
+        }
+        return true;
+    }, {
+        message: t('setup.errorDateOrder', "End date cannot be earlier than start date"),
+        path: ["endDate"],
+    });
+
+    type TripFormValues = z.infer<typeof schema>;
 
     const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<TripFormValues>({
         resolver: zodResolver(schema),
@@ -59,21 +62,11 @@ export default function TripSetupPage() {
         setError(null);
 
         try {
-            // Get current user (optional, depending on RLS, but usually good practice)
-            // const { data: { user } } = await supabase.auth.getUser();
-
-            // Construct flight_info JSON
             const flightInfo = {
                 destination: data.destination,
                 startDate: data.startDate,
                 endDate: data.endDate
             };
-
-            // Upsert trip_config
-            // Note: In a real app we might query by user_id. 
-            // For this shared trip app, we effectively restart the trip config.
-            // We will check if a record exists to update it, or insert a new one.
-            // Since we don't have a specific ID, let's just fetch the first one or create new.
 
             const { data: existingConfig } = await supabase
                 .from('trip_config')
@@ -96,8 +89,6 @@ export default function TripSetupPage() {
                     .from('trip_config')
                     .insert({
                         flight_info: flightInfo,
-                        // If you have user_id column and it's required:
-                        // user_id: user?.id 
                     });
             }
 
@@ -108,7 +99,7 @@ export default function TripSetupPage() {
 
         } catch (err: any) {
             console.error('Error saving trip:', err);
-            setError(err.message || "儲存失敗，請稍後再試。");
+            setError(err.message || t('setup.saveError', "Save failed, please try again later."));
         } finally {
             setIsSubmitting(false);
         }
@@ -121,8 +112,8 @@ export default function TripSetupPage() {
                     <div className="inline-flex items-center justify-center p-4 bg-white rounded-full shadow-sm mb-4">
                         <Plane className="w-10 h-10 text-btn" />
                     </div>
-                    <h1 className="text-3xl font-bold mb-2 tracking-tight">開始新旅程</h1>
-                    <p className="text-desc">設定你的航班與時間，自動生成行程表</p>
+                    <h1 className="text-3xl font-bold mb-2 tracking-tight">{t('setup.title', 'Start New Adventure')}</h1>
+                    <p className="text-desc">{t('setup.subtitle', 'Set your flight and dates to auto-generate itinerary')}</p>
                 </header>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
@@ -134,13 +125,13 @@ export default function TripSetupPage() {
 
                     {/* Destination */}
                     <div className="space-y-2">
-                        <label className="text-sm font-semibold ml-1 text-gray-600">目的地</label>
+                        <label className="text-sm font-semibold ml-1 text-gray-600">{t('setup.destination', 'Destination')}</label>
                         <div className="relative">
                             <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                             <input
                                 {...register("destination")}
                                 type="text"
-                                placeholder="例如：東京, 大阪"
+                                placeholder={t('setup.destinationPlaceholder', 'e.g. Tokyo, Osaka')}
                                 className="w-full pl-12 pr-4 py-4 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-btn focus:bg-white transition-all font-medium"
                             />
                         </div>
@@ -149,7 +140,7 @@ export default function TripSetupPage() {
 
                     {/* Date Range Selection */}
                     <div className="space-y-2">
-                        <label className="text-sm font-semibold ml-1 text-gray-600">日期</label>
+                        <label className="text-sm font-semibold ml-1 text-gray-600">{t('setup.dates', 'Dates')}</label>
                         <div className="relative">
                             <button
                                 type="button"
@@ -160,7 +151,7 @@ export default function TripSetupPage() {
                                 <span className={watch("startDate") ? "text-gray-900" : "text-gray-400"}>
                                     {watch("startDate") && watch("endDate")
                                         ? `${format(new Date(watch("startDate")), "yyyy/MM/dd")} - ${format(new Date(watch("endDate")), "yyyy/MM/dd")}`
-                                        : "選擇日期範圍"}
+                                        : t('setup.selectDateRange', 'Select Date Range')}
                                 </span>
                             </button>
 
@@ -188,11 +179,6 @@ export default function TripSetupPage() {
                                             if (range?.to) {
                                                 setValue("endDate", format(range.to, "yyyy-MM-dd"), { shouldValidate: true });
                                             } else {
-                                                // Often react-day-picker returns undefined for 'to' if only one day is clicked
-                                                // We can allow users to pick the same day as start and end, or wait for the second click
-                                                // If range.to is undefined, we might just keep endDate empty or set it same as start if that's desired behavior.
-                                                // For 'travel', usually it's > 1 day, but 1 day is possible.
-                                                // Let's clear endDate if not selected to force user to pick range or pick same day again if supported.
                                                 setValue("endDate", "", { shouldValidate: true });
                                             }
 
@@ -222,7 +208,7 @@ export default function TripSetupPage() {
                         type="submit"
                         className="w-full py-4 mt-4 bg-gray-900 text-white rounded-2xl font-bold text-lg flex items-center justify-center space-x-2 hover:bg-black active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-gray-200"
                     >
-                        <span>{isSubmitting ? '設定中...' : 'Start Adventure'}</span>
+                        <span>{isSubmitting ? t('setup.submit', 'Start Adventure') : t('setup.submit', 'Start Adventure')}</span>
                         {!isSubmitting && <ArrowRight className="w-5 h-5" />}
                     </button>
                 </form>

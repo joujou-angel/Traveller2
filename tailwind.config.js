@@ -6,6 +6,9 @@ export default {
     ],
     theme: {
         extend: {
+            fontFamily: {
+                handwriting: ['Caveat', 'cursive'],
+            },
             colors: {
                 page: {
                     title: '#342b14',

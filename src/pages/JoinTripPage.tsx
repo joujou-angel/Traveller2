@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../features/auth/AuthContext';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 const JoinTripPage = () => {
+    const { t } = useTranslation();
     const { tripId } = useParams();
     const navigate = useNavigate();
     const { user, loading } = useAuth();
@@ -16,7 +18,7 @@ const JoinTripPage = () => {
         const joinTrip = async () => {
             if (!tripId) {
                 setStatus('error');
-                setErrorMessage('Invalid Invite Link');
+                setErrorMessage(t('join.invalidLink', 'Invalid Invite Link'));
                 return;
             }
 
@@ -64,7 +66,7 @@ const JoinTripPage = () => {
                 if (joinError) {
                     // Unique violation code is 23505
                     if (joinError.code === '23505') {
-                        toast.info('You are already a member of this trip!');
+                        toast.info(t('join.alreadyMember', 'You are already a member of this trip!'));
                         setStatus('success');
                         setTimeout(() => navigate(`/trips/${tripId}/itinerary`), 1000);
                         return;
@@ -106,18 +108,18 @@ const JoinTripPage = () => {
                 // -----------------------------------
 
                 setStatus('success');
-                toast.success('Successfully joined the trip!');
+                toast.success(t('join.success', 'Successfully joined the trip!'));
                 setTimeout(() => navigate(`/trips/${tripId}/itinerary`), 1500);
 
             } catch (err: any) {
                 console.error('Join Error:', err);
                 setStatus('error');
-                setErrorMessage(err.message || 'Failed to join trip');
+                setErrorMessage(err.message || t('join.failed', 'Failed to join trip'));
             }
         };
 
         joinTrip();
-    }, [tripId, user, loading, navigate]);
+    }, [tripId, user, loading, navigate, t]);
 
     return (
         <div className="min-h-screen bg-page-bg flex flex-col items-center justify-center p-6 text-center">
@@ -146,25 +148,25 @@ const JoinTripPage = () => {
                 <div>
                     {(status === 'validating' || status === 'joining') && (
                         <>
-                            <h2 className="text-xl font-bold text-gray-800 mb-2">Joining Trip...</h2>
-                            <p className="text-gray-500 text-sm">Please wait while we add you to the group.</p>
+                            <h2 className="text-xl font-bold text-gray-800 mb-2">{t('join.joining', 'Joining Trip...')}</h2>
+                            <p className="text-gray-500 text-sm">{t('join.joiningDesc', 'Please wait while we add you to the group.')}</p>
                         </>
                     )}
                     {status === 'success' && (
                         <>
-                            <h2 className="text-xl font-bold text-gray-800 mb-2">Welcome Aboard!</h2>
-                            <p className="text-gray-500 text-sm">Redirecting to itinerary...</p>
+                            <h2 className="text-xl font-bold text-gray-800 mb-2">{t('join.welcome', 'Welcome Aboard!')}</h2>
+                            <p className="text-gray-500 text-sm">{t('join.redirecting', 'Redirecting to itinerary...')}</p>
                         </>
                     )}
                     {status === 'error' && (
                         <>
-                            <h2 className="text-xl font-bold text-gray-800 mb-2">Unable to Join</h2>
+                            <h2 className="text-xl font-bold text-gray-800 mb-2">{t('join.errorTitle', 'Unable to Join')}</h2>
                             <p className="text-red-500 text-sm">{errorMessage}</p>
                             <button
                                 onClick={() => navigate('/')}
                                 className="mt-6 px-6 py-2 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-colors"
                             >
-                                Go Home
+                                {t('common.goHome', 'Go Home')}
                             </button>
                         </>
                     )}

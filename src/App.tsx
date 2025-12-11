@@ -8,10 +8,10 @@ import InfoPage from './pages/InfoPage'
 import TripSetupPage from './pages/TripSetupPage'
 import LoginPage from './pages/LoginPage'
 import TripListPage from './pages/TripListPage'
-import { AuthProvider, useAuth } from './context/AuthContext'
+import JoinTripPage from './pages/JoinTripPage'
+import { AuthProvider, useAuth } from './features/auth/AuthContext'
 import { Toaster } from 'sonner'
 import { Loader2 } from 'lucide-react'
-import JoinTripPage from './pages/JoinTripPage'
 
 const queryClient = new QueryClient()
 

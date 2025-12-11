@@ -1,18 +1,19 @@
-
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { CalendarDays, Wallet, CloudSun, Info, Home } from 'lucide-react'
 import { cn } from '../../lib/utils'
+import { useTranslation } from 'react-i18next'
 
 const BottomNav = () => {
+    const { t } = useTranslation()
     const location = useLocation()
     const { tripId } = useParams()
 
     const tabs = [
-        { name: 'Trips', path: '/', icon: Home },
-        { name: 'Itinerary', path: `/trips/${tripId}/itinerary`, icon: CalendarDays },
-        { name: 'Expenses', path: `/trips/${tripId}/expenses`, icon: Wallet },
-        { name: 'Weather', path: `/trips/${tripId}/weather`, icon: CloudSun },
-        { name: 'Info', path: `/trips/${tripId}/info`, icon: Info },
+        { name: t('nav.trips', 'Trips'), path: '/', icon: Home },
+        { name: t('nav.itinerary', 'Itinerary'), path: `/trips/${tripId}/itinerary`, icon: CalendarDays },
+        { name: t('nav.expenses', 'Expenses'), path: `/trips/${tripId}/expenses`, icon: Wallet },
+        { name: t('nav.weather', 'Weather'), path: `/trips/${tripId}/weather`, icon: CloudSun },
+        { name: t('nav.info', 'Info'), path: `/trips/${tripId}/info`, icon: Info },
     ]
 
     return (
@@ -20,7 +21,7 @@ const BottomNav = () => {
             <div className="flex justify-around items-center h-16">
                 {tabs.map((tab) => {
                     const Icon = tab.icon
-                    const isActive = location.pathname.includes(tab.path) || (tab.name === 'Itinerary' && location.pathname === `/trips/${tripId}`)
+                    const isActive = location.pathname.includes(tab.path) || (tab.name === t('nav.itinerary', 'Itinerary') && location.pathname === `/trips/${tripId}`)
 
                     return (
                         <Link
