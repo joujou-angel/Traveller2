@@ -389,7 +389,19 @@ IF (user.subscription == 'free') {
         *   **Itinerary**: 轉為 Notion Toggle List 或 Checklist。
         *   **Expenses**: 轉為 Excel (含公式)，讓用戶可以二次編輯。
 
-2. **支付整合 (Payment Integration)**
+### 7.5 國際化策略 (Internationalization / i18n) [12/11 Finalized]
+
+針對多語言支援，採用開發體驗優先的策略。
+
+*   **技術選型**：`react-i18next` (業界標準)。
+*   **路由策略**：**偵測式 (Detection-based)**。
+    *   **邏輯**：不改變 URL (如 `/app/dashboard`)，而是根據瀏覽器語言設定或 `localStorage` 自動切換語言。
+    *   **理由**：私有行程 App 不需要針對每頁做 SEO，保持 URL 簡潔更重要。
+*   **範圍**：
+    *   **UI 文字**：全數抽離至 `locales/*.json`。
+    *   **用戶內容**：不自動翻譯，保持原樣。
+
+3. **支付整合 (Payment Integration)**
    您需要一個處理全球支付的 Merchant of Record (MoR)。
    *   **推薦方案 (Winner)**： **Lemon Squeezy** (勝過 Stripe)。
    *   **關鍵理由**：
