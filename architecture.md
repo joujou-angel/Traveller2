@@ -306,39 +306,71 @@ src/
 
 ---
 
-## 7. 商業變現與戰略轉型 (Vision 2.0) [12/10 New]
+## 7. 商業變現與戰略轉型 (Monetization Strategy) [12/11 Finalized]
 
-### 7.1 第一階段：商業思維重塑 (Business Logic Shift)
+基於使用者決策，本專案採用 **「漸進式付費牆 (Progressive Paywall)」** 策略，平衡初期成長 (Growth) 與變現 (Revenue)。
 
-請先釐清一個殘酷的事實：用戶買的不是 App，而是「問題的解決方案」。 只要您能解決問題，用戶不在乎是透過瀏覽器還是透過 App Store 下載。
+### 7.1 收費機制 (The Hybrid Model)
 
-針對旅遊 App，有三種不需要原生 App 也能賺錢的高潛力模式：
+核心邏輯：**生涯額度 (Lifetime Quota) + 活躍限制 (Active Limit)**
 
-1. **訂閱制 Web SaaS (Subscription-based Web SaaS)**
-   *   **模式**： 基礎功能免費，進階功能（如：AI 行程規劃、離線 PDF 匯出、多人協作）收費。
-   *   **優勢**： 使用 Stripe 或 Lemon Squeezy 等支付工具，手續費僅約 3%-5%，遠低於 App Store 的 30%。
-   *   **技術實踐**： 利用 Supabase Auth 做權限管理，Vercel 部署極速更新。
+| 階段 | 用戶動作 | 系統限制 | 收費狀態 |
+| :--- | :--- | :--- | :--- |
+| **第 1 趟** | 建立行程 | ✅ 允許。享有完整功能。 | **FREE** |
+| **第 2 趟** | 建立行程 | ⚠️ **條件允許**。系統強制要求 **封存 (Archive)** 第 1 趟行程 (變唯讀)，才能開啟第 2 趟。 | **FREE (Condition)** |
+| **第 3 趟+** | 建立行程 | ⛔ **禁止**。觸發付費牆 (Paywall)。 | **PAY ($)** |
 
-2. **B2B / 白牌解決方案 (White Label Solution)**
-   *   **思辨**： 旅遊市場的 C 端 (一般遊客) 競爭極度激烈。但 B 端 (小型旅行社、獨立導遊、民宿業者) 可能極度缺乏數位工具。
-   *   **模式**： 將您的 App 賣給旅行社，讓他們用您的系統為客戶排行程，並生成漂亮的行程單給客戶。
-   *   **優勢**： 客單價高，客戶黏著度高，完全不需要手機 App，Web 介面更適合桌面端操作。
+### 7.2 付費方案 (Pricing Tiers)
 
-3. **內容/數據變現 (Content/Data Monetization)**
-   *   **模式**： 您的 App 是一個「容器」，販賣的是「高品質的結構化數據」。例如：販售特定達人規劃好的「深度日本五日遊 json 數據包」，用戶購買後直接導入 App。
-   *   **優勢**： 這是「知識付費」的變體，技術門檻低，依賴的是您的內容運營能力。
+建議透過 **Lemon Squeezy** (MoR) 實作以下兩種方案：
 
-### 7.2 第二階段：技術執行策略 (Technical Execution)
+1.  **單次通行證 (Trip Pass)**
+    *   **價格**：$2.99 / trip (預估)。
+    *   **權限**：解鎖單一行程。
+    *   **賣點**：適合低頻旅遊者 (一年出國一次)。
 
-既然不上架，您必須將 Web App 的體驗做到極致，讓用戶感覺不到「這只是一個網頁」。這需要 PWA 與 現代支付流 的整合。
+2.  **專業訂閱 (Pro Subscription)**
+    *   **價格**：$29 / year (預估)。
+    *   **權限**：無限建立行程，無需封存。
+    *   **賣點**：適合導遊、領隊或旅遊成癮者。
 
-1. **PWA (Progressive Web App) —— 偽裝成 App**
-   不要只是做一個網站，要做一個 PWA。
-   *   **技術原理**： 透過 manifest.json 和 Service Workers，讓您的網站可以被「安裝」到用戶的手機主畫面上，擁有獨立的 Icon，且沒有瀏覽器的網址列。
-   *   **關鍵優勢**：
-       *   **可安裝**： iOS 和 Android 現在都支援將 PWA 加到主畫面。
-    *   **離線能力**： 使用 Supabase 的 Local Caching 或 React Query，讓用戶在飛機上也能查看部分行程。
-       *   **零審核**： 您想發布新功能？git push 到 Vercel，用戶下一秒重新整理就看到了。
+### 7.3 技術實作 (Execution & Locking)
+
+為了防止前端破解，所有限制必須在 **資料庫層 (Database Layer)** 實作。
+
+#### A. 資料庫設計
+1.  **`users` 表新增欄位**：
+    *   `lifetime_trip_count` (int): 生涯累計建立行程數。
+    *   `subscription_status` (text): 'free', 'pro', 'trip_pass'.
+2.  **`trips` 表新增欄位**：
+    *   `status` (text): 'active', 'archived'.
+    *   `is_unlocked` (boolean): 是否已購買單次通行證。
+
+#### B. 鎖定邏輯 (DB Trigger - 偽代碼)
+```sql
+-- 當用戶嘗試建立新行程 (Insert Trip)
+IF (user.subscription == 'free') {
+    -- 規則 1: 檢查生涯額度
+    IF (user.lifetime_trip_count >= 2) {
+        RAISE EXCEPTION '已達免費額度上限 (2次)。請升級或是購買單次通行證。';
+    }
+    
+    -- 規則 2: 檢查活躍行程 (Active Trip Check)
+    active_trips = SELECT count(*) FROM trips WHERE status = 'active' AND owner = user.id;
+    IF (active_trips >= 1) {
+        RAISE EXCEPTION '免費版只能有一個活躍行程。請先封存舊行程。';
+    }
+}
+```
+
+#### C. 支付流程 (Lemon Squeezy Integration)
+1.  **觸發**：用戶點擊「解鎖行程」-> 前端呼叫 Lemon Squeezy API 建立 Checkout URL。
+2.  **支付**：用戶在 Lemon Squeezy 頁面完成付款。
+3.  **開通 (Webhook)**：
+    *   Lemon Squeezy 發送 `order_created` webhook 到 Supabase Edge Function。
+    *   Edge Function 驗證簽章後，更新 DB：
+        *   若是 Trip Pass -> 設定 `trips.is_unlocked = true`。
+        *   若是 Subscription -> 設定 `users.subscription_status = 'pro'`。
 
 ### 7.4 資料互通性 (Data Portability) [User Priority]
 
