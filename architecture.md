@@ -337,17 +337,37 @@ src/
    *   **技術原理**： 透過 manifest.json 和 Service Workers，讓您的網站可以被「安裝」到用戶的手機主畫面上，擁有獨立的 Icon，且沒有瀏覽器的網址列。
    *   **關鍵優勢**：
        *   **可安裝**： iOS 和 Android 現在都支援將 PWA 加到主畫面。
-       *   **離線能力**： 使用 Supabase 的 Local Caching 或 React Query，讓用戶在飛機上也能查看部分行程。
+    *   **離線能力**： 使用 Supabase 的 Local Caching 或 React Query，讓用戶在飛機上也能查看部分行程。
        *   **零審核**： 您想發布新功能？git push 到 Vercel，用戶下一秒重新整理就看到了。
+
+### 7.4 資料互通性 (Data Portability) [User Priority]
+
+打破「封閉花園」，降低遷移門檻，讓用戶敢於開始。
+
+1.  **Excel 匯入 (Smart Excel Import)**
+    *   **痛點**：用戶不想手動一筆一筆 Key 資料，尤其是已經在 Google Sheet 排好行程的人。
+    *   **解法**：支援 `.xlsx` 或 `.csv` 檔案拖曳上傳。
+    *   **智慧解析**：系統提供「範本」下載，並嘗試模糊匹配欄位 (如：偵測 "Time", "Date", "Location" 等關鍵字)。
+    *   **戰略意義**：極低門檻的 "Onboarding" 體驗，搶奪 Google Sheet 用戶。
+
+2.  **Excel/Notion 匯出 (Export)**
+    *   **定位**：付費功能 (Pro Feature)。
+    *   **用途**：旅行結束後的「結案報告」與「分帳明細」。
+    *   **格式**：
+        *   **Itinerary**: 轉為 Notion Toggle List 或 Checklist。
+        *   **Expenses**: 轉為 Excel (含公式)，讓用戶可以二次編輯。
 
 2. **支付整合 (Payment Integration)**
    您需要一個處理全球支付的 Merchant of Record (MoR)。
-   *   **推薦方案**： Lemon Squeezy 或 Stripe。
+   *   **推薦方案 (Winner)**： **Lemon Squeezy** (勝過 Stripe)。
+   *   **關鍵理由**：
+       *   **稅務地獄 (Global Tax)**：Stripe 只負責收錢，不負責算稅。若賣給歐洲/日本用戶，您需自行處理 VAT/消費稅。
+       *   **MoR 優勢**：Lemon Squeezy 作為 Merchant of Record會代您處理全球稅務，您只需收受稅後款項，省去龐大的法務與會計成本。
    *   **與 Supabase 的架構**：
        *   用戶在前端點擊「訂閱」。
-       *   跳轉至 Stripe Checkout 頁面。
-       *   支付成功後，Stripe 透過 Webhook 通知您的 Supabase Edge Function。
-       *   Supabase 更新 users 資料表中的 subscription_status 欄位。
+       *   跳轉至 **Lemon Squeezy Checkout** 頁面。
+       *   支付成功後，Lemon Squeezy 透過 Webhook 通知您的 Supabase Edge Function。
+       *   Supabase 更新 `users` 資料表中的 `subscription_status` 或 `lifetime_trip_count`。
        *   React 前端根據狀態解鎖功能。
 
 3. **SEO (搜尋引擎優化) —— 免費流量的入口**
