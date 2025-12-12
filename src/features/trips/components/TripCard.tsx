@@ -28,7 +28,7 @@ export const TripCard = ({ trip, currentUserId, onEditClick, onArchiveClick }: T
     return (
         <div
             onClick={handleCardClick}
-            className={`group bg-white rounded-3xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer border border-transparent hover:border-btn/30 active:scale-98 ${trip.status === 'archived' ? 'opacity-75 grayscale' : ''}`}
+            className="group bg-white rounded-3xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer border border-transparent hover:border-btn/30 active:scale-98"
         >
             <div className="flex gap-4">
                 {/* Cover Image - Smaller size */}

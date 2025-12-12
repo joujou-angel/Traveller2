@@ -202,10 +202,10 @@
         "buyNow": "Buy Now",
         "pro": "Pro Membership",
         "upgrade": "Upgrade to Pro",
-        "banner": "Free Plan: Max {{total}} trips total • Max {{active}} active trip",
+        "banner": "Testing Phase: Max {{total}} trips total • Max {{active}} active trips",
         "upgradeBtn": "UPGRADE",
-        "activeLimitWarning": "You have an active trip. Please archive it to create a new one.",
-        "limitActive": "Free plan allows only 1 active trip. Please archive another trip first.",
-        "rules": "Free Plan: Max 3 trips total. Max 1 active trip allowed."
+        "activeLimitWarning": "You have reached the active trip limit (3). Please archive one to create new.",
+        "limitActive": "Free plan allows only 3 active trips. Please archive another trip first.",
+        "rules": "Free Plan: Max 5 trips total. Max 3 active trips allowed."
     }
 }

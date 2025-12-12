@@ -86,9 +86,9 @@ const TripListPage = () => {
         if (trip.status === 'archived') {
             // Unarchive Logic
             // Check limits before unarchiving?
-            // "Free users can only have 1 active trip"
-            if (profile?.subscription_status === 'free' && activeTrips.length >= 1) {
-                toast.error(t('subscription.limitActive', 'Free plan allows only 1 active trip. Please archive another trip first.'));
+            // "Free users can only have 3 active trips"
+            if (profile?.subscription_status === 'free' && activeTrips.length >= 3) {
+                toast.error(t('subscription.limitActive', 'Free plan allows only 3 active trips. Please archive another trip first.'));
                 return;
             }
             updateTripStatusMutation.mutate({ id: trip.id, status: 'active' });
@@ -103,21 +103,17 @@ const TripListPage = () => {
     const handleCreateClick = () => {
         // Enforce Limits
         const isFree = profile?.subscription_status === 'free';
-        // const lifetimeCount = profile?.lifetime_trip_count || 0; // Use DB count or trips length
-        // We can use local trips length as a proxy for "Created Trips" if we trust the user hasn't deleted them. 
-        // For stricter check, we rely on DB profile count, but let's use trips.length + archivedTrips.length for "Lifetime" approximation if profile count is 0.
-        // Actually, just checking total trips owned by user is safer.
         const myTripsCount = trips?.filter(t => t.user_id === user?.id).length || 0;
 
         if (isFree) {
             // 1. Check Active Limit
-            if (activeTrips.filter(t => t.user_id === user?.id).length >= 1) {
-                toast.warning(t('subscription.activeLimitWarning', 'You have an active trip. Please archive it to create a new one.'));
+            if (activeTrips.filter(t => t.user_id === user?.id).length >= 3) {
+                toast.warning(t('subscription.activeLimitWarning', 'You have reached the active trip limit (3). Please archive one to create new.'));
                 return;
             }
 
             // 2. Check Lifetime Limit (Hard Paywall)
-            if (myTripsCount >= 3) {
+            if (myTripsCount >= 5) {
                 setIsSubscriptionModalOpen(true);
                 return;
             }
@@ -167,7 +163,7 @@ const TripListPage = () => {
                         </h2>
                         <div className="flex items-center gap-2">
                             <span className="text-xs text-gray-400 font-mono bg-white px-2 py-1 rounded-md border">
-                                {activeTrips.length} / {profile?.subscription_status === 'pro' ? '∞' : '1'}
+                                {activeTrips.length} / {profile?.subscription_status === 'pro' ? '∞' : '3'}
                             </span>
                         </div>
                     </div>
@@ -239,7 +235,7 @@ const TripListPage = () => {
                 <div className="fixed bottom-0 left-0 right-0 z-40 bg-orange-50 px-6 py-3 border-t border-orange-100 flex items-center justify-between animate-fade-in-up shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
                     <div className="flex items-center gap-2 text-xs font-bold text-orange-800">
                         <Info className="w-4 h-4 text-orange-500" />
-                        <span>{t('subscription.banner', 'Free Plan: Max {{total}} trips total • Max {{active}} active trip', { total: 3, active: 1 })}</span>
+                        <span>{t('subscription.banner', 'Testing Phase: Max {{total}} trips total • Max {{active}} active trips', { total: 5, active: 3 })}</span>
                     </div>
                     <button
                         onClick={() => setIsSubscriptionModalOpen(true)}
