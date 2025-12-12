@@ -250,7 +250,30 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
                             <input
                                 type="url"
                                 placeholder={t('itinerary.googleMapPlaceholder', '(Auto-extracted)')}
-                                {...register('google_map_link')}
+                                {...register('google_map_link', {
+                                    onChange: (e) => {
+                                        const url = e.target.value;
+                                        if (!url.includes('google.com/maps')) return;
+
+                                        // 1. Extract Place Name
+                                        // Pattern: /place/Place+Name/
+                                        const nameMatch = url.match(/\/place\/([^/]+)\//);
+                                        if (nameMatch && nameMatch[1]) {
+                                            const rawName = nameMatch[1];
+                                            // Decode: Tokyo+Tower -> Tokyo Tower, and URI decode for special chars
+                                            const cleanName = decodeURIComponent(rawName.replace(/\+/g, ' '));
+                                            setValue('location', cleanName);
+                                        }
+
+                                        // 2. Extract Coordinates
+                                        // Pattern: @lat,lng,
+                                        const coordsMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+                                        if (coordsMatch) {
+                                            setValue('lat', parseFloat(coordsMatch[1]));
+                                            setValue('lng', parseFloat(coordsMatch[2]));
+                                        }
+                                    }
+                                })}
                                 className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] placeholder-[#667280] text-[#342b14]"
                             />
                         </div>
