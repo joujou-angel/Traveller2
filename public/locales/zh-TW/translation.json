@@ -9,7 +9,8 @@
         "notes": "備註",
         "clickToAdd": "",
         "confirmDelete": "確定要刪除這個項目嗎？",
-        "noData": "沒有資料"
+        "noData": "沒有資料",
+        "offlineMode": "您目前處於離線狀態，變更可能無法儲存。"
     },
     "tripList": {
         "subtitle": "規劃您的下一段旅程",
@@ -177,16 +178,21 @@
         "buyNow": "立即購買",
         "pro": "專業會員",
         "upgrade": "升級 Pro",
-        "banner": "測試期間：最多 {{total}} 個行程 • 同時僅限 {{active}} 個活躍行程",
+        "banner": "免費版：主辦行程上限 {{active}} 個 • 受邀行程免費！",
         "upgradeBtn": "升級方案",
-        "activeLimitWarning": "您已達到活躍行程上限 (3)。請先封存舊行程才能建立新的。",
-        "limitActive": "免費版僅允許 3 個活躍行程。請先封存其他行程。",
-        "rules": "免費版限制：最多 5 個行程，同時僅限 3 個活躍行程。",
+        "activeLimitWarning": "您已達到主辦行程上限 (3)。受邀行程不佔額度！",
+        "limitActive": "免費版僅允許 3 個主辦行程。參加朋友行程不限數量。",
+        "rules": "免費版：3 個活躍主辦行程。參加與封存無限制。",
         "unlimitedTrips": "無限量建立行程",
         "smartExport": "智慧匯出 (Notion / Excel)",
         "premiumSupport": "優先客服支援",
         "mockPaymentActive": "(模擬付款模式已啟用)",
         "comingSoon": "即將推出",
         "recommended": "推薦"
+    },
+    "memory": {
+        "placeholder": "我喜歡這個景點.. 因為...",
+        "save": "儲存回憶",
+        "private": "我的悄悄話"
     }
 }

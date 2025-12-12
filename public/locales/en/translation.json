@@ -9,7 +9,8 @@
         "notes": "Notes",
         "clickToAdd": "Click to add",
         "confirmDelete": "Are you sure you want to delete this item?",
-        "noData": "No Data"
+        "noData": "No Data",
+        "offlineMode": "You are currently offline. Changes may not be saved."
     },
     "tripList": {
         "subtitle": "PLAN YOUR NEXT ADVENTURE",
@@ -197,15 +198,15 @@
     "subscription": {
         "title": "Unlock Your Adventure",
         "subtitle": "You reached the limit of free active trips.",
+        "activeLimitWarning": "You have reached the active owned trip limit (3). Joined trips are free!",
+        "limitActive": "Free plan allows 3 active owned trips. Joined trips do not count.",
+        "rules": "Free Plan: 3 Active Owner Slots. Unlimited Join & Archiving.",
         "tripPass": "Single Trip Pass",
-        "tripPassDesc": "Unlock 1 additional trip. Perfect for occasional travelers.",
-        "buyNow": "Buy Now",
-        "pro": "Pro Membership",
-        "upgrade": "Upgrade to Pro",
-        "banner": "Testing Phase: Max {{total}} trips total • Max {{active}} active trips",
-        "upgradeBtn": "UPGRADE",
-        "activeLimitWarning": "You have reached the active trip limit (3). Please archive one to create new.",
-        "limitActive": "Free plan allows only 3 active trips. Please archive another trip first.",
-        "rules": "Free Plan: Max 5 trips total. Max 3 active trips allowed."
+        "tripPassDesc": "Unlock 1 additional trip. Perfect for occasional travelers."
+    },
+    "memory": {
+        "placeholder": "I like this spot because...",
+        "save": "Save Memory",
+        "private": "Private Memory"
     }
 }

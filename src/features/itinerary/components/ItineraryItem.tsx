@@ -1,12 +1,16 @@
-import { useState } from 'react';
-import { ExternalLink, Edit2, Trash2, Bus, Utensils, Bed, Camera, ChevronDown, ChevronUp } from 'lucide-react';
-
+import { useState, useMemo } from 'react';
+import { ExternalLink, Edit2, Trash2, Bus, Utensils, Bed, Camera, ChevronDown, ChevronUp, Heart } from 'lucide-react';
+import { useTripMemories } from '../../memories/hooks/useTripMemories';
+import { MemoryModal } from '../../memories/components/MemoryModal';
+import { MoodIcon, MOODS } from '../../memories/components/MoodIcons';
+import type { MoodType } from '../../memories/components/MoodIcons';
 
 interface ItineraryItemProps {
     item: any;
     onEdit: (item: any) => void;
     onDelete: (id: number) => void;
     isReadOnly?: boolean;
+    tripId: string; // Required for fetching memories
 }
 
 const CategoryIcons: Record<string, any> = {
@@ -23,13 +27,29 @@ const CategoryColors: Record<string, string> = {
     activity: 'bg-positive/20 text-positive border-positive/30',
 };
 
-export default function ItineraryItem({ item, onEdit, onDelete, isReadOnly = false }: ItineraryItemProps) {
+export default function ItineraryItem({ item, onEdit, onDelete, isReadOnly = false, tripId }: ItineraryItemProps) {
     const [isExpanded, setIsExpanded] = useState(false);
+    const [isMemoryModalOpen, setIsMemoryModalOpen] = useState(false);
+
+    // Trip Memories Hook
+    const { memories, createMemory, updateMemory, isCreating, isUpdating } = useTripMemories(tripId);
+
+    // Find my memory for this distinct item
+    const myMemory = useMemo(() => {
+        return memories?.find(m => m.trip_item_id === item.id) || null;
+    }, [memories, item.id]);
+
+    const handleMemorySubmit = (data: any) => {
+        if ('id' in data) {
+            updateMemory(data);
+        } else {
+            createMemory(data);
+        }
+    };
 
     const Icon = CategoryIcons[item.category] || Camera;
     const colorClass = CategoryColors[item.category] || 'bg-gray-50 text-gray-500';
 
-    // Format time (HH:MM:SS -> HH:MM)
     // Format time (HH:MM:SS -> HH:MM)
     const timeStr = item.start_time ? item.start_time.split(':').slice(0, 2).join(':') : '--:--';
 
@@ -45,7 +65,6 @@ export default function ItineraryItem({ item, onEdit, onDelete, isReadOnly = fal
                     onClick={() => setIsExpanded(!isExpanded)}
                 >
                     {/* Time */}
-                    {/* Time */}
                     <span className="text-sm font-bold text-gray-600 font-mono whitespace-nowrap min-w-[5.5rem]">
                         {timeStr}
                         {item.endTime && <span className="text-gray-400"> - {item.endTime}</span>}
@@ -57,9 +76,32 @@ export default function ItineraryItem({ item, onEdit, onDelete, isReadOnly = fal
                     </div>
 
                     {/* Location (Main Content) */}
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 flex items-center gap-2">
                         <h3 className="font-bold text-gray-800 text-lg leading-tight truncate">{item.location}</h3>
                     </div>
+
+                    {/* Memory Button (Visible in Header) */}
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsMemoryModalOpen(true);
+                        }}
+                        className={`rounded-full transition-all flex items-center justify-center hover:scale-110
+                            ${myMemory
+                                ? 'p-0' // Remove padding for larger icon
+                                : 'p-2 text-gray-300 hover:text-orange-400 hover:bg-orange-50'
+                            }
+                        `}
+                    >
+                        {myMemory ? (
+                            <MoodIcon
+                                mood={MOODS.find(m => m.id === myMemory.mood_emoji) ? (myMemory.mood_emoji as MoodType) : 'discovery'}
+                                size={36} // Increased from 20 to 36
+                            />
+                        ) : (
+                            <Heart className="w-5 h-5" />
+                        )}
+                    </button>
 
                     {/* Toggle Icon */}
                     <div className="text-gray-300 group-hover:text-gray-500 transition-colors">
@@ -78,20 +120,22 @@ export default function ItineraryItem({ item, onEdit, onDelete, isReadOnly = fal
 
                         {/* Actions Bar */}
                         <div className="flex items-center justify-between pt-2">
-                            {/* External Link */}
-                            {item.google_map_link ? (
-                                <a
-                                    href={item.google_map_link}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:underline"
-                                >
-                                    <ExternalLink className="w-4 h-4" />
-                                    <span>Google Maps</span>
-                                </a>
-                            ) : (
-                                <span className="text-xs text-gray-400">No link provided</span>
-                            )}
+                            <div className="flex items-center gap-3">
+                                {/* External Link */}
+                                {item.google_map_link ? (
+                                    <a
+                                        href={item.google_map_link}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:underline"
+                                    >
+                                        <ExternalLink className="w-4 h-4" />
+                                        <span>Google Maps</span>
+                                    </a>
+                                ) : (
+                                    <span className="text-xs text-gray-400">No link</span>
+                                )}
+                            </div>
 
                             {/* Edit/Delete - Only show if not read only */}
                             {!isReadOnly && (
@@ -114,6 +158,16 @@ export default function ItineraryItem({ item, onEdit, onDelete, isReadOnly = fal
                     </div>
                 )}
             </div>
+
+            {/* Memory Modal */}
+            <MemoryModal
+                isOpen={isMemoryModalOpen}
+                onClose={() => setIsMemoryModalOpen(false)}
+                memory={myMemory}
+                itemId={item.id}
+                onSubmit={handleMemorySubmit}
+                isSubmitting={isCreating || isUpdating}
+            />
         </div>
     );
 }

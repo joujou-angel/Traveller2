@@ -90,6 +90,7 @@ export default function DayView({ tripId, date, onEdit, isReadOnly = false, item
                                     item={{ ...item, endTime: endTimeStr }} // Pass calculated end time to item if needed, but Item might not accept it yet.
                                     onEdit={onEdit}
                                     isReadOnly={isReadOnly}
+                                    tripId={tripId}
                                     onDelete={(id) => {
                                         if (confirm(t('common.confirmDelete', 'Are you sure you want to delete this item?'))) {
                                             deleteMutation.mutate(id);

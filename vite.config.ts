@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['vite.svg'],
+      includeAssets: ['app-icon.svg'],
       manifest: {
         name: 'Traveller 2',
         short_name: 'Traveller',
@@ -16,14 +16,16 @@ export default defineConfig({
         theme_color: '#faf8f5',
         background_color: '#faf8f5',
         display: 'standalone',
+        scope: '/',
+        start_url: '/',
         icons: [
           {
-            src: 'vite.svg',
+            src: 'app-icon.svg',
             sizes: '192x192',
             type: 'image/svg+xml'
           },
           {
-            src: 'vite.svg',
+            src: 'app-icon.svg',
             sizes: '512x512',
             type: 'image/svg+xml'
           }

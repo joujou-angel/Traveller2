@@ -74,6 +74,8 @@ const TripListPage = () => {
 
     const activeTrips = trips?.filter(t => t.status !== 'archived') || [];
     const archivedTrips = trips?.filter(t => t.status === 'archived') || [];
+    // Owner-Only Quota Logic: Only count trips owned by the current user
+    const myActiveTrips = activeTrips.filter(t => t.user_id === user?.id);
 
     const handleEditClick = (e: React.MouseEvent, trip: Trip) => {
         e.stopPropagation(); // Prevent navigating to trip details
@@ -86,8 +88,8 @@ const TripListPage = () => {
         if (trip.status === 'archived') {
             // Unarchive Logic
             // Check limits before unarchiving?
-            // "Free users can only have 3 active trips"
-            if (profile?.subscription_status === 'free' && activeTrips.length >= 3) {
+            // "Free users can only have 3 active trips (OWNED)"
+            if (profile?.subscription_status === 'free' && trip.user_id === user?.id && myActiveTrips.length >= 3) {
                 toast.error(t('subscription.limitActive', 'Free plan allows only 3 active trips. Please archive another trip first.'));
                 return;
             }
@@ -103,18 +105,11 @@ const TripListPage = () => {
     const handleCreateClick = () => {
         // Enforce Limits
         const isFree = profile?.subscription_status === 'free';
-        const myTripsCount = trips?.filter(t => t.user_id === user?.id).length || 0;
 
         if (isFree) {
-            // 1. Check Active Limit
-            if (activeTrips.filter(t => t.user_id === user?.id).length >= 3) {
+            // 1. Check Active Limit (Owner Only)
+            if (myActiveTrips.length >= 3) {
                 toast.warning(t('subscription.activeLimitWarning', 'You have reached the active trip limit (3). Please archive one to create new.'));
-                return;
-            }
-
-            // 2. Check Lifetime Limit (Hard Paywall)
-            if (myTripsCount >= 5) {
-                setIsSubscriptionModalOpen(true);
                 return;
             }
         }
@@ -140,6 +135,19 @@ const TripListPage = () => {
 
                     {/* User Area */}
                     <div className="flex items-center gap-2 pt-1">
+                        {/* DEV: Reset Subscription */}
+                        {profile?.subscription_status === 'pro' && (
+                            <button
+                                onClick={async () => {
+                                    await supabase.from('profiles').update({ subscription_status: 'free' }).eq('id', user?.id);
+                                    queryClient.invalidateQueries({ queryKey: ['profile'] });
+                                    toast.success('Reset to Free Plan');
+                                }}
+                                className="text-[10px] bg-gray-100 text-gray-500 px-2 py-1 rounded hover:bg-gray-200"
+                            >
+                                Dev: Reset
+                            </button>
+                        )}
                         <LanguageSwitcher />
                         <button
                             onClick={signOut}
@@ -162,8 +170,8 @@ const TripListPage = () => {
                             {t('tripList.activeTrips', 'Active Trips')}
                         </h2>
                         <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-400 font-mono bg-white px-2 py-1 rounded-md border">
-                                {activeTrips.length} / {profile?.subscription_status === 'pro' ? '∞' : '3'}
+                            <span className="text-xs text-gray-400 font-mono bg-white px-2 py-1 rounded-md border" title="Occupied Owner Slots">
+                                {myActiveTrips.length} / {profile?.subscription_status === 'pro' ? '∞' : '3'}
                             </span>
                         </div>
                     </div>
@@ -235,7 +243,7 @@ const TripListPage = () => {
                 <div className="fixed bottom-0 left-0 right-0 z-40 bg-orange-50 px-6 py-3 border-t border-orange-100 flex items-center justify-between animate-fade-in-up shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
                     <div className="flex items-center gap-2 text-xs font-bold text-orange-800">
                         <Info className="w-4 h-4 text-orange-500" />
-                        <span>{t('subscription.banner', 'Testing Phase: Max {{total}} trips total • Max {{active}} active trips', { total: 5, active: 3 })}</span>
+                        <span>{t('subscription.banner', 'Free Plan: Max {{active}} owned active trips. Joined trips FREE!', { active: 3 })}</span>
                     </div>
                     <button
                         onClick={() => setIsSubscriptionModalOpen(true)}

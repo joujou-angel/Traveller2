@@ -320,60 +320,19 @@ export default function ItineraryPage() {
                 </div>
 
                 {/* Export Button */}
-                {/* Action Menu */}
-                <div className="relative mr-4 z-20">
-                    <button
-                        onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        className="p-2 bg-white rounded-full shadow-sm border border-gray-100 text-gray-600 hover:text-gray-900 transition-colors"
-                    >
-                        <MoreVertical className="w-5 h-5" />
-                    </button>
-
-                    {isMenuOpen && (
-                        <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden flex flex-col py-1">
-                            <button
-                                onClick={handleExport}
-                                className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-sm text-gray-700 transition-colors"
-                            >
-                                <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
-                                    <FileText className="w-3.5 h-3.5" />
-                                </div>
-                                {t('export.notion', 'Export Notion')}
-                            </button>
-
-                            <button
-                                onClick={handleExcelExport}
-                                className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-sm text-gray-700 transition-colors"
-                            >
-                                <div className="w-6 h-6 rounded-full bg-green-50 flex items-center justify-center text-green-600">
-                                    <Download className="w-3.5 h-3.5" />
-                                </div>
-                                {t('export.backup', 'Backup Excel')}
-                            </button>
-
-                            <div className="h-[1px] bg-gray-100 my-1 mx-2"></div>
-
-                            <button
-                                onClick={handleImportClick}
-                                className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-sm text-gray-700 transition-colors"
-                            >
-                                <div className="w-6 h-6 rounded-full bg-orange-50 flex items-center justify-center text-orange-500">
-                                    <Upload className="w-3.5 h-3.5" />
-                                </div>
-                                {t('export.restore', 'Restore Data')}
-                            </button>
-                        </div>
-                    )}
-
-                    {/* Hidden File Input */}
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept=".xlsx"
-                        className="hidden"
-                        onChange={handleFileImport}
-                    />
-                </div>
+                {/* Export/Import Menu Temporarily Hidden */}
+                {/* 
+                   <ActionMenu /> code was here. 
+                   Restoring requires uncommenting valid JSX or reverting.
+                   For now, we just keep the file input below.
+                */}
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept=".xlsx"
+                    className="hidden"
+                    onChange={handleFileImport}
+                />
             </div>
 
             {/* Content Area */}
@@ -396,23 +355,27 @@ export default function ItineraryPage() {
             </div>
 
             {/* FAB - Only show for Owner */}
-            {isOwner && (
-                <button
-                    onClick={handleAdd}
-                    className="fixed bottom-24 right-6 w-14 h-14 bg-btn text-white rounded-full shadow-lg shadow-gray-200 flex items-center justify-center active:scale-90 transition-all hover:scale-105 z-40"
-                >
-                    <Plus className="w-6 h-6" />
-                </button>
-            )}
+            {
+                isOwner && (
+                    <button
+                        onClick={handleAdd}
+                        className="fixed bottom-24 right-6 w-14 h-14 bg-btn text-white rounded-full shadow-lg shadow-gray-200 flex items-center justify-center active:scale-90 transition-all hover:scale-105 z-40"
+                    >
+                        <Plus className="w-6 h-6" />
+                    </button>
+                )
+            }
 
             {/* Form Modal */}
-            {isFormOpen && (
-                <ItineraryForm
-                    initialData={editingItem}
-                    onSubmit={handleFormSubmit}
-                    onCancel={() => setIsFormOpen(false)}
-                />
-            )}
-        </div>
+            {
+                isFormOpen && (
+                    <ItineraryForm
+                        initialData={editingItem}
+                        onSubmit={handleFormSubmit}
+                        onCancel={() => setIsFormOpen(false)}
+                    />
+                )
+            }
+        </div >
     );
 }

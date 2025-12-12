@@ -14,6 +14,7 @@ import JoinTripPage from './pages/JoinTripPage'
 import { AuthProvider, useAuth } from './features/auth/AuthContext'
 import { Toaster } from 'sonner'
 import { Loader2 } from 'lucide-react'
+import { OfflineIndicator } from './components/ui/OfflineIndicator'
 
 // 1. Configure QueryClient with Offline-friendly settings
 const queryClient = new QueryClient({
@@ -61,6 +62,7 @@ function App() {
     >
       <Toaster position="top-center" richColors />
       <AuthProvider>
+        <OfflineIndicator />
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
