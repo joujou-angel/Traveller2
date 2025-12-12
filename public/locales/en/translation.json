@@ -16,7 +16,10 @@
         "welcome": "Welcome",
         "myTrips": "My Trips",
         "plans": "Plans",
-        "emptyState": "Plan your first trip here!"
+        "emptyState": "Plan your first trip here!",
+        "activeTrips": "Active Trips",
+        "archivedTrips": "Archived Trips",
+        "noActive": "No active trips."
     },
     "nav": {
         "trips": "Trips",
@@ -149,6 +152,7 @@
         "locationName": "Location",
         "locationPlaceholder": "e.g. Tokyo Tower",
         "googleMapLink": "Google Maps Link",
+        "googleMapPlaceholder": "(Auto-extracted)",
         "notesPlaceholder": "What to eat? What's special?",
         "emptyStateHint": "Start planning!"
     },
@@ -189,5 +193,19 @@
         "welcome": "Welcome Aboard!",
         "redirecting": "Redirecting to itinerary...",
         "errorTitle": "Unable to Join"
+    },
+    "subscription": {
+        "title": "Unlock Your Adventure",
+        "subtitle": "You reached the limit of free active trips.",
+        "tripPass": "Single Trip Pass",
+        "tripPassDesc": "Unlock 1 additional trip. Perfect for occasional travelers.",
+        "buyNow": "Buy Now",
+        "pro": "Pro Membership",
+        "upgrade": "Upgrade to Pro",
+        "banner": "Free Plan: Max {{total}} trips total • Max {{active}} active trip",
+        "upgradeBtn": "UPGRADE",
+        "activeLimitWarning": "You have an active trip. Please archive it to create a new one.",
+        "limitActive": "Free plan allows only 1 active trip. Please archive another trip first.",
+        "rules": "Free Plan: Max 3 trips total. Max 1 active trip allowed."
     }
 }

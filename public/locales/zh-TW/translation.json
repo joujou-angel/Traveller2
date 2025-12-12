@@ -16,7 +16,10 @@
         "welcome": "歡迎",
         "myTrips": "我的旅程",
         "plans": "個計劃",
-        "emptyState": "開始規劃！"
+        "emptyState": "開始規劃！",
+        "activeTrips": "進行中的旅程",
+        "archivedTrips": "美好的回憶",
+        "noActive": "目前沒有進行中的旅程。"
     },
     "nav": {
         "trips": "旅程",
@@ -124,6 +127,7 @@
         "locationName": "地點名稱",
         "locationPlaceholder": "e.g. 東京鐵塔",
         "googleMapLink": "Google Maps 連結",
+        "googleMapPlaceholder": "(自動擷取)",
         "notesPlaceholder": "想吃什麼？要注意什麼？",
         "emptyStateHint": "開始規劃！"
     },
@@ -164,5 +168,19 @@
         "welcome": "歡迎加入！",
         "redirecting": "正在導向至行程表...",
         "errorTitle": "無法加入"
+    },
+    "subscription": {
+        "title": "解鎖您的冒險",
+        "subtitle": "您已達到免費活躍行程的上限。",
+        "tripPass": "單次通行證",
+        "tripPassDesc": "解鎖 1 個額外行程。適合偶爾旅遊的人。",
+        "buyNow": "立即購買",
+        "pro": "專業會員",
+        "upgrade": "升級 Pro",
+        "banner": "免費版：最多 {{total}} 個行程 • 同時僅限 {{active}} 個活躍行程",
+        "upgradeBtn": "升級方案",
+        "activeLimitWarning": "您已有一個進行中的行程。請先封存舊行程才能建立新的。",
+        "limitActive": "免費版僅允許 1 個活躍行程。請先封存其他行程。",
+        "rules": "免費版限制：最多 3 個行程，同時僅限 1 個活躍行程。"
     }
 }

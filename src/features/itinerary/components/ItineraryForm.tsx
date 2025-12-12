@@ -249,7 +249,7 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
                             <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a39992]" />
                             <input
                                 type="url"
-                                placeholder={t('itinerary.googleMapPlaceholder', 'https://maps.app.goo.gl/... (Auto-extracted)')}
+                                placeholder={t('itinerary.googleMapPlaceholder', '(Auto-extracted)')}
                                 {...register('google_map_link')}
                                 className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] placeholder-[#667280] text-[#342b14]"
                             />

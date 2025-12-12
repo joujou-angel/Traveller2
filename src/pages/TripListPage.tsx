@@ -1,4 +1,4 @@
-import { Plus, LogOut, Loader2, Info } from 'lucide-react';
+import { Plus, LogOut, Loader2, Info, Plane, Archive } from 'lucide-react';
 import { useAuth } from '../features/auth/AuthContext';
 import { TravellerLogo } from '../components/TravellerLogo';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -155,30 +155,15 @@ const TripListPage = () => {
                 </div>
             </div>
 
-            {/* Free Plan Limits Banner */}
-            {profile?.subscription_status !== 'pro' && (
-                <div className="bg-orange-50 px-6 py-3 border-b border-orange-100 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-xs font-bold text-orange-800">
-                        <Info className="w-4 h-4 text-orange-500" />
-                        <span>{t('subscription.banner', 'Free Plan: Max 3 trips total • Max 1 active trip')}</span>
-                    </div>
-                    <button
-                        onClick={() => setIsSubscriptionModalOpen(true)}
-                        className="text-[10px] font-bold bg-white border border-orange-200 text-orange-600 px-2 py-1 rounded-full shadow-sm active:scale-95"
-                    >
-                        {t('subscription.upgradeBtn', 'UPGRADE')}
-                    </button>
-                </div>
-            )}
-
-            {/* Trip List */}
-            <div className="p-6 space-y-6">
+            {/* Trip Lists */}
+            <div className="p-6 space-y-8 pb-20">
 
                 {/* Active Trips */}
                 <div className="space-y-4">
                     <div className="flex justify-between items-center">
                         <h2 className="text-lg font-bold text-gray-700 flex items-center gap-2">
-                            🚀 {t('tripList.activeTrips', 'Active Trips')}
+                            <Plane className="w-5 h-5 text-sky-500" />
+                            {t('tripList.activeTrips', 'Active Trips')}
                         </h2>
                         <div className="flex items-center gap-2">
                             <span className="text-xs text-gray-400 font-mono bg-white px-2 py-1 rounded-md border">
@@ -216,7 +201,8 @@ const TripListPage = () => {
                 {(archivedTrips.length > 0 || isLoading) && (
                     <div className="space-y-4">
                         <h2 className="text-lg font-bold text-gray-500 flex items-center gap-2 opacity-80">
-                            📦 {t('tripList.archivedTrips', 'Archived')}
+                            <Archive className="w-5 h-5" />
+                            {t('tripList.archivedTrips', 'Archived')}
                         </h2>
                         <div className="space-y-4 opacity-80 hover:opacity-100 transition-opacity">
                             {archivedTrips.map(trip => (
@@ -245,6 +231,22 @@ const TripListPage = () => {
                             <path d="M50 70 L 70 80 L 85 60" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                     </div>
+                </div>
+            )}
+
+            {/* Fixed Bottom Banner Plan Info */}
+            {profile?.subscription_status !== 'pro' && (
+                <div className="fixed bottom-0 left-0 right-0 z-40 bg-orange-50 px-6 py-3 border-t border-orange-100 flex items-center justify-between animate-fade-in-up shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                    <div className="flex items-center gap-2 text-xs font-bold text-orange-800">
+                        <Info className="w-4 h-4 text-orange-500" />
+                        <span>{t('subscription.banner', 'Free Plan: Max {{total}} trips total • Max {{active}} active trip', { total: 3, active: 1 })}</span>
+                    </div>
+                    <button
+                        onClick={() => setIsSubscriptionModalOpen(true)}
+                        className="text-[10px] font-bold bg-white border border-orange-200 text-orange-600 px-3 py-1.5 rounded-full shadow-sm active:scale-95 flex items-center gap-1"
+                    >
+                        {t('subscription.upgradeBtn', 'UPGRADE')}
+                    </button>
                 </div>
             )}
 
