@@ -1,7 +1,7 @@
-# 架構書 1208 (Comprehensive Edition)
+# 架構書 1212 (Comprehensive Edition)
 
 **專案名稱：** 旅遊筆記本 (Travel Notebook)
-**版本：** 1208 (Pre-Alpha / Dev)
+**版本：** 1212 (Pre-Alpha / Dev)
 **目標：** 提供一個高顏值、手機優先的 React PWA，解決團體旅遊中的「資訊分散」、「行程變動」與「分帳困難」三大痛點。
 
 ---
@@ -294,7 +294,34 @@ src/
 *   **Visual Clarity**: 
     *   將金額與幣別移至右側獨立顯示，並修正幣別代碼順序。
     *   分帳成員若為全員，以標籤 **"Everyone/All"** 簡潔顯示；若為部分成員，則以堆疊頭像 (Stacked Avatars) 呈現。
-*   **Localization**: 完整支援中英文切換 (如 "Paid by" vs "由...支付")，並移除硬編碼文字。
+    *   **Localization**: 完整支援中英文切換 (如 "Paid by" vs "由...支付")，並移除硬編碼文字。
+
+### 5.8 模擬支付整合 (Mock Payment Integration) [12/12 New]
+*   **功能**：在開發階段模擬完整的支付與升級流程，無需真實刷卡。
+*   **流程**：
+    *   點擊 "Upgrade to Pro" 或 "Unlock Trip"。
+    *   系統模擬 API 延遲 (1.5秒)。
+    *   自動跳轉至成功頁面，並更新用戶權限狀態 (Mock State)。
+*   **目的**：驗證前端 UI/UX 流程，確保訂閱後的權限解鎖邏輯正確。
+
+---
+
+## 6. 未來開發路線圖 (Roadmap) - Remaining Items
+
+### 5.9 地點搜尋與地圖整合 (Location Search & Map Integration) [12/12 Updated]
+*   **Location Search (Nominatim)**: 整合 **OpenStreetMap** API，實作 **Debounced Search** (防抖搜尋) 機制，提供流暢的全球地點關鍵字檢索。
+*   **Smart Link Parsing**: 自動解析貼入的 Google Maps 連結：
+    *   **Short URL** (`goo.gl`): 透過 Edge Function 還原真實網址。
+    *   **Coordinate Extraction**: 自動從 URL 中提取 `@lat,lng` 座標並儲存。
+    *   **Place Name**: 自動從 URL 中提取地點名稱 (需 Decode)。
+*   **Visual Feedback**: 在表單中直接顯示地圖釘選圖示。
+
+### 5.10 行程時長管理 (Travel Logic) [12/12 Updated]
+*   **Duration Calculation**:
+    *   **Input**: 採用「開始時間」與「結束時間」雙重輸入。
+    *   **Logic**: 自動計算 `Duration = End - Start` (分鐘)。
+    *   **Overnight Support**: 智慧判斷跨日行程 (如 23:00 -> 01:00)，自動補正時數。
+*   **Database**: 新增 `duration` 欄位，取代原本僅記錄開始時間的模式，為未來排程功能鋪路。
 
 ---
 
@@ -302,10 +329,10 @@ src/
 
 以下功能為下一階段開發重點：
 
-1.  **Google Map 深度整合 (Google Map Integration)**
+1.  **Google Map 深度整合 (Interactive Map Embed)**
     *   目標：在行程卡片中直接嵌入互動地圖，而非僅顯示連結。
-    *   技術：使用 Google Maps JavaScript API 或 Embed API。
-    *   功能：根據 `location` 或 `notes` 中的座標顯示 Pin 點。
+    *   現狀：已完成座標 (Lat/Lng) 的儲存架構 (Phase 1)。
+    *   下一步：使用 Google Maps JavaScript API 在前端渲染 Pin 點與路線。
 
 2.  **公告欄 (Announcements)**
     *   目標：置頂重要訊息 (如：集合時間、注意事項)。

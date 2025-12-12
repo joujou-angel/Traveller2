@@ -3,6 +3,8 @@ import { X, Save, Clock, Link as LinkIcon, AlignLeft, Bus, Utensils, Bed, Camera
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import LocationPicker from './LocationPicker';
+import { supabase } from '../../../lib/supabase';
+import { toast } from 'sonner';
 
 interface ItineraryFormProps {
     initialData?: any;
@@ -251,26 +253,49 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
                                 type="url"
                                 placeholder={t('itinerary.googleMapPlaceholder', '(Auto-extracted)')}
                                 {...register('google_map_link', {
-                                    onChange: (e) => {
+                                    onChange: async (e) => {
                                         const url = e.target.value;
-                                        if (!url.includes('google.com/maps')) return;
+                                        if (!url) return;
 
-                                        // 1. Extract Place Name
-                                        // Pattern: /place/Place+Name/
-                                        const nameMatch = url.match(/\/place\/([^/]+)\//);
-                                        if (nameMatch && nameMatch[1]) {
-                                            const rawName = nameMatch[1];
-                                            // Decode: Tokyo+Tower -> Tokyo Tower, and URI decode for special chars
-                                            const cleanName = decodeURIComponent(rawName.replace(/\+/g, ' '));
-                                            setValue('location', cleanName);
+                                        const parseUrl = (targetUrl: string) => {
+                                            // 1. Extract Place Name
+                                            const nameMatch = targetUrl.match(/\/place\/([^/]+)\//);
+                                            if (nameMatch && nameMatch[1]) {
+                                                const rawName = nameMatch[1];
+                                                const cleanName = decodeURIComponent(rawName.replace(/\+/g, ' '));
+                                                setValue('location', cleanName);
+                                            }
+
+                                            // 2. Extract Coordinates
+                                            const coordsMatch = targetUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+                                            if (coordsMatch) {
+                                                setValue('lat', parseFloat(coordsMatch[1]));
+                                                setValue('lng', parseFloat(coordsMatch[2]));
+                                            }
+                                        };
+
+                                        // Case A: Short URL (e.g. maps.app.goo.gl)
+                                        if (url.includes('goo.gl') || url.includes('g.page')) {
+                                            const toastId = toast.loading(t('common.loading', 'Loading...'));
+                                            try {
+                                                const { data, error } = await supabase.functions.invoke('expand-url', {
+                                                    body: { url }
+                                                });
+                                                if (error) throw error;
+                                                if (data?.expandedUrl) {
+                                                    parseUrl(data.expandedUrl);
+                                                    toast.success(t('itinerary.locationFound', 'Location found!')); // Need translation key or plain text
+                                                }
+                                            } catch (err) {
+                                                console.error('Failed to expand URL:', err);
+                                                // Fail silently or toast error? Silent is better for UX while typing
+                                            } finally {
+                                                toast.dismiss(toastId);
+                                            }
                                         }
-
-                                        // 2. Extract Coordinates
-                                        // Pattern: @lat,lng,
-                                        const coordsMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-                                        if (coordsMatch) {
-                                            setValue('lat', parseFloat(coordsMatch[1]));
-                                            setValue('lng', parseFloat(coordsMatch[2]));
+                                        // Case B: Long URL
+                                        else if (url.includes('google.com/maps')) {
+                                            parseUrl(url);
                                         }
                                     }
                                 })}

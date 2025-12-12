@@ -181,6 +181,12 @@
         "upgradeBtn": "升級方案",
         "activeLimitWarning": "您已達到活躍行程上限 (3)。請先封存舊行程才能建立新的。",
         "limitActive": "免費版僅允許 3 個活躍行程。請先封存其他行程。",
-        "rules": "免費版限制：最多 5 個行程，同時僅限 3 個活躍行程。"
+        "rules": "免費版限制：最多 5 個行程，同時僅限 3 個活躍行程。",
+        "unlimitedTrips": "無限量建立行程",
+        "smartExport": "智慧匯出 (Notion / Excel)",
+        "premiumSupport": "優先客服支援",
+        "mockPaymentActive": "(模擬付款模式已啟用)",
+        "comingSoon": "即將推出",
+        "recommended": "推薦"
     }
 }
