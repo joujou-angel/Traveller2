@@ -347,7 +347,34 @@ src/
 
 ---
 
-## 7. 商業變現與戰略轉型 (Monetization Strategy) [12/11 Finalized]
+### 7.6 離線功能架構 (Offline Architecture) [12/12 Proposed]
+
+為了解決旅遊途中網路不穩的痛點，此專案將導入 **"Offline-First"** 設計。
+
+#### 階段一：靜態資源快取 (PWA Foundation)
+*   **技術**：`vite-plugin-pwa` (Workbox)。
+*   **策略**：**Network First, falling back to Cache**。
+*   **效果**：在飛航模式下仍可開啟 App，看到 UI 介面（但無資料）。
+
+#### 階段二：唯讀資料快取 (Offline Read-Only)
+*   **技術**：`TanStack Query` + `persistQueryClient`。
+*   **儲存層**：`localStorage` (輕量) 或 `IndexedDB` (大量資料)。
+*   **機制**：
+    1.  用戶有網路時瀏覽過的行程、天氣、記帳資料，會自動快取。
+    2.  離線時，App 自動讀取快取資料並顯示 "Offline Mode" 提示。
+    3.  **Stale-Time**：設定較長的 stale time (如 1小時)，減少不必要的背景重整。
+
+#### 階段三：離線編輯與同步 (Offline Read-Write) -- *Advanced*
+*   **挑戰**：解決資料衝突 (Conflict Resolution)。
+*   **架構**：**Optimistic UI + Mutation Queue**。
+*   **流程**：
+    1.  **離線編輯**：用戶新增一筆記帳 -> UI 立即顯示（標示為 Pending）-> 動作存入 Queue。
+    2.  **連線恢復**：監聽 `navigator.onLine` 事件 -> 依序重放 Queue 中的 API 請求。
+    3.  **衝突處理**：採用 **Last-Write-Wins** 策略，若 Server 版本較新則覆蓋本地，並通知用戶。
+
+---
+
+## 8. 商業變現與戰略轉型 (Monetization Strategy) [12/11 Finalized]
 
 基於使用者決策，本專案採用 **「漸進式付費牆 (Progressive Paywall)」** 策略，平衡初期成長 (Growth) 與變現 (Revenue)。
 
