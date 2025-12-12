@@ -1,4 +1,6 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient } from '@tanstack/react-query'
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import MainLayout from './components/layout/MainLayout'
 import ItineraryPage from './pages/ItineraryPage'
@@ -13,7 +15,21 @@ import { AuthProvider, useAuth } from './features/auth/AuthContext'
 import { Toaster } from 'sonner'
 import { Loader2 } from 'lucide-react'
 
-const queryClient = new QueryClient()
+// 1. Configure QueryClient with Offline-friendly settings
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      gcTime: 1000 * 60 * 60 * 24, // 24 Hours (Keep cache for offline usage)
+      staleTime: 1000 * 60 * 5,    // 5 Minutes (Fetch less often)
+      retry: 1,
+    },
+  },
+})
+
+// 2. Create Persister (localStorage)
+const persister = createSyncStoragePersister({
+  storage: window.localStorage,
+})
 
 const ProtectedRoute = () => {
   const { user, loading } = useAuth();
@@ -35,7 +51,14 @@ const ProtectedRoute = () => {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{ persister }}
+      onSuccess={() => {
+        // Optional: resumed from cache
+        console.log("Restored from cache");
+      }}
+    >
       <Toaster position="top-center" richColors />
       <AuthProvider>
         <BrowserRouter>
@@ -62,7 +85,7 @@ function App() {
           </Routes>
         </BrowserRouter>
       </AuthProvider>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   )
 }
 
