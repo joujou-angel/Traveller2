@@ -1,7 +1,8 @@
 import { useForm } from 'react-hook-form';
-import { X, Save, Clock, MapPin, Link as LinkIcon, AlignLeft, Bus, Utensils, Bed, Camera } from 'lucide-react';
+import { X, Save, Clock, Link as LinkIcon, AlignLeft, Bus, Utensils, Bed, Camera } from 'lucide-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import LocationPicker from './LocationPicker';
 
 interface ItineraryFormProps {
     initialData?: any;
@@ -17,6 +18,8 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
             minute: '',
             category: 'activity',
             location: '',
+            lat: null as number | null,
+            lng: null as number | null,
             google_map_link: '',
             notes: '',
             initial_start_time: initialData?.start_time // temp storage
@@ -38,7 +41,9 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
     const handleFormSubmit = (data: any) => {
         const finalData = {
             ...data,
-            start_time: `${data.hour}:${data.minute}`
+            start_time: `${data.hour}:${data.minute}`,
+            lat: data.lat,
+            lng: data.lng
         };
         delete finalData.hour;
         delete finalData.minute;
@@ -136,15 +141,21 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
                     {/* Location */}
                     <div className="space-y-1">
                         <label className="text-xs font-bold text-[#554030] ml-1">{t('itinerary.locationName', 'Location Name')}</label>
-                        <div className="relative">
-                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a39992]" />
-                            <input
-                                type="text"
-                                placeholder={t('itinerary.locationPlaceholder', 'e.g. Tokyo Tower')}
-                                {...register('location', { required: true })}
-                                className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] placeholder-[#667280] text-[#342b14]"
-                            />
-                        </div>
+                        <LocationPicker
+                            initialValue={watch('location')}
+                            onChange={(val) => {
+                                setValue('location', val);
+                                // Optional: Reset coords if they type manually?
+                                // setValue('lat', null);
+                                // setValue('lng', null);
+                            }}
+                            onSelect={(loc) => {
+                                setValue('location', loc.name);
+                                setValue('lat', loc.lat);
+                                setValue('lng', loc.lng);
+                                setValue('google_map_link', `https://www.google.com/maps?q=${loc.lat},${loc.lng}`);
+                            }}
+                        />
                     </div>
 
                     {/* Google Map Link */}

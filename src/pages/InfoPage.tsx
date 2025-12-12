@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { Plane, Hotel as HotelIcon, Plus, X, Loader2, Save, Maximize2, Edit, ArrowLeft } from 'lucide-react';
+import { Plane, Hotel as HotelIcon, Plus, X, Loader2, Save, Edit, ArrowLeft } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';

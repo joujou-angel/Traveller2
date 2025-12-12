@@ -229,7 +229,6 @@ export function useTripWeather(tripId?: string, language: string = 'en') {
         data: weatherSegments,
         isLoading: isWeatherLoading,
         error: weatherError,
-        refetch,
         isRefetching
     } = useQuery({
         queryKey: ['weather', geoData?.latitude, geoData?.longitude, tripData?.startDate, tripData?.endDate],

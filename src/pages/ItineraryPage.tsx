@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { Loader2, Plus } from 'lucide-react';
 import DayView from '../features/itinerary/components/DayView';
 import ItineraryForm from '../features/itinerary/components/ItineraryForm';
+import TripMap from '../features/itinerary/components/TripMap';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -65,6 +66,25 @@ export default function ItineraryPage() {
         }
         return list;
     }, [tripInfo, t]);
+
+    // Fetch Itineraries for Active Day
+    const activeDate = days[activeDayIndex]?.date;
+    const { data: itineraryItems, isLoading: isItineraryLoading } = useQuery({
+        queryKey: ['itineraries', tripId, activeDate],
+        queryFn: async () => {
+            if (!tripId || !activeDate) return [];
+            const { data, error } = await supabase
+                .from('itineraries')
+                .select('*')
+                .eq('trip_id', tripId)
+                .eq('date', activeDate)
+                .order('start_time', { ascending: true });
+
+            if (error) throw error;
+            return data;
+        },
+        enabled: !!tripId && !!activeDate
+    });
 
     // Mutations
     const upsertMutation = useMutation({
@@ -188,12 +208,21 @@ export default function ItineraryPage() {
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 p-4 bg-page-bg min-h-[calc(100vh-140px)]">
+            <div className="flex-1 p-4 bg-page-bg min-h-[calc(100vh-140px)] flex flex-col gap-4">
+                {/* Map View */}
+                {itineraryItems && itineraryItems.length > 0 && (
+                    <div className="w-full">
+                        <TripMap items={itineraryItems} />
+                    </div>
+                )}
+
                 <DayView
                     tripId={tripId!} // Pass tripId
                     date={days[activeDayIndex].date}
                     onEdit={handleEdit}
                     isReadOnly={!isOwner}
+                    items={itineraryItems || []}
+                    isLoading={isItineraryLoading}
                 />
             </div>
 

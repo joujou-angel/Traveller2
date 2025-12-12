@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../lib/supabase';
 import ItineraryItem from './ItineraryItem';
 import { Loader2 } from 'lucide-react';
@@ -9,30 +9,16 @@ interface DayViewProps {
     date: string; // ISO date string YYYY-MM-DD
     onEdit: (item: any) => void;
     isReadOnly?: boolean;
+    items: any[];
+    isLoading: boolean;
 }
 
-const fetchItineraries = async (tripId: string, date: string) => {
-    const { data, error } = await supabase
-        .from('itineraries')
-        .select('*')
-        .eq('trip_id', tripId) // Filter by tripId
-        .eq('date', date)
-        .order('start_time', { ascending: true });
-
-    if (error) throw error;
-    return data;
-};
-
-export default function DayView({ tripId, date, onEdit, isReadOnly = false }: DayViewProps) {
+export default function DayView({ tripId, date, onEdit, isReadOnly = false, items, isLoading }: DayViewProps) {
     const { t } = useTranslation();
     const queryClient = useQueryClient();
 
-    // Fetch Items
-    const { data: items, isLoading } = useQuery({
-        queryKey: ['itineraries', tripId, date], // Scope by tripId
-        queryFn: () => fetchItineraries(tripId, date),
-        enabled: !!tripId // Ensure tripId exists
-    });
+    // Fetch Items - Removed, lifted to parent
+
 
     // Delete Mutation
     const deleteMutation = useMutation({
