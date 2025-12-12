@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, Loader2 } from 'lucide-react';
+import { MapPin, Loader2, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface LocationResult {
@@ -23,10 +23,28 @@ export default function LocationPicker({ onSelect, onChange, initialValue }: Loc
     const [isLoading, setIsLoading] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const wrapperRef = useRef<HTMLDivElement>(null);
+    const skipSearchRef = useRef(false);
 
     useEffect(() => {
         setQuery(initialValue || '');
     }, [initialValue]);
+
+    // Debounced Auto-Search
+    useEffect(() => {
+        // Skip if this update was triggered by selection
+        if (skipSearchRef.current) {
+            skipSearchRef.current = false;
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            if (query.trim().length > 1) {
+                handleSearch();
+            }
+        }, 600); // 600ms Delay
+
+        return () => clearTimeout(timer);
+    }, [query]);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -42,11 +60,16 @@ export default function LocationPicker({ onSelect, onChange, initialValue }: Loc
         if (!query.trim()) return;
 
         setIsLoading(true);
-        setIsOpen(true);
+        // setIsOpen(true); // Don't force open immediately, maybe wait for results?
+        // Actually fine to open to show loading?
+        // Let's open only if we have results or are loading?
+        // Let's keep existing behavior for now but safeguard against empty query.
+
         try {
             const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
             const data = await response.json();
             setResults(data);
+            setIsOpen(true); // Show results (or "No results")
         } catch (error) {
             console.error("Search failed:", error);
             setResults([]);
@@ -63,6 +86,7 @@ export default function LocationPicker({ onSelect, onChange, initialValue }: Loc
     };
 
     const handleSelect = (item: LocationResult) => {
+        skipSearchRef.current = true; // Prevent auto-search triggered by this update
         const name = item.name || item.display_name.split(',')[0];
         setQuery(name);
         onSelect({
@@ -89,13 +113,26 @@ export default function LocationPicker({ onSelect, onChange, initialValue }: Loc
                     placeholder={t('itinerary.locationPlaceholder', 'e.g. Tokyo Tower')}
                     className="w-full pl-10 pr-10 py-3 bg-white rounded-xl border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] placeholder-[#667280] text-[#342b14]"
                 />
-                <button
-                    type="button"
-                    onClick={handleSearch}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
-                >
-                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                </button>
+
+                {/* Status Indicator / Actions */}
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    {isLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-gray-400 m-1.5" />
+                    ) : query ? (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setQuery('');
+                                setIsOpen(false);
+                                onChange?.('');
+                                // Optionally focus input?
+                            }}
+                            className="p-1.5 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    ) : null}
+                </div>
             </div>
 
             {/* Dropdown Results */}

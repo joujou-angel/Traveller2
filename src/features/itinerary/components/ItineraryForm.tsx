@@ -16,6 +16,8 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
         defaultValues: {
             hour: '',
             minute: '',
+            endHour: '',
+            endMinute: '',
             category: 'activity',
             location: '',
             lat: null as number | null,
@@ -29,25 +31,71 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
     // Reset if initialData changes
     useEffect(() => {
         if (initialData) {
-            const [h, m] = (initialData.start_time || '09:00').split(':');
+            const [h, m] = (initialData.start_time || '09:00').split(':').map(Number);
+            const duration = initialData.duration || 60;
+
+            // Calculate End Time
+            const startDate = new Date();
+            startDate.setHours(h, m, 0, 0);
+            const endDate = new Date(startDate.getTime() + duration * 60000);
+
             reset({
                 ...initialData,
-                hour: h,
-                minute: m || '00'
+                hour: h.toString().padStart(2, '0'),
+                minute: m.toString().padStart(2, '0'),
+                endHour: endDate.getHours().toString().padStart(2, '0'),
+                endMinute: endDate.getMinutes().toString().padStart(2, '0'),
+            });
+        } else {
+            // Default: Start 09:00, End 10:00
+            reset({
+                hour: '09',
+                minute: '00',
+                endHour: '10',
+                endMinute: '00',
+                category: 'activity',
+                location: '',
+                lat: null, lng: null, google_map_link: '', notes: ''
             });
         }
     }, [initialData, reset]);
 
     const handleFormSubmit = (data: any) => {
+        const startH = parseInt(data.hour);
+        const startM = parseInt(data.minute);
+        const endH = parseInt(data.endHour);
+        const endM = parseInt(data.endMinute);
+
+        const startTimeInMins = startH * 60 + startM;
+        const endTimeInMins = endH * 60 + endM;
+
+        let duration = endTimeInMins - startTimeInMins;
+
+        // Handle overnight (e.g. 23:00 to 01:00) by adding 24 hours
+        if (duration < 0) {
+            duration += 24 * 60;
+        }
+
+        if (duration === 0) {
+            alert(t('itinerary.errorZeroDuration', 'Duration cannot be zero'));
+            return;
+        }
+
         const finalData = {
             ...data,
             start_time: `${data.hour}:${data.minute}`,
+            duration: duration,
             lat: data.lat,
             lng: data.lng
         };
+
+        // Cleanup temp fields
         delete finalData.hour;
         delete finalData.minute;
+        delete finalData.endHour;
+        delete finalData.endMinute;
         delete finalData.initial_start_time;
+        if ('endTime' in finalData) delete finalData.endTime; // Remove calculated display field
 
         onSubmit(finalData);
     };
@@ -80,11 +128,11 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
                 <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {/* Time */}
+                        {/* Start Time */}
                         <div className="space-y-1">
                             <label className="text-xs font-bold text-[#554030] ml-1 flex items-center gap-1">
                                 <Clock className="w-3 h-3" />
-                                <span>{t('itinerary.time', 'Time')}</span>
+                                <span>{t('itinerary.startTime', 'Start Time')}</span>
                             </label>
                             <div className="flex gap-2 items-center">
                                 <div className="relative flex-1">
@@ -94,7 +142,7 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
                                         min="0"
                                         max="23"
                                         {...register('hour', { required: true, min: 0, max: 23 })}
-                                        className="w-full px-2 py-3 bg-gray-50 rounded-xl border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] text-center font-mono placeholder-[#667280] text-[#342b14] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        className="w-full px-2 py-3 bg-gray-50 rounded-xl border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] text-center font-mono placeholder-[#667280] text-[#342b14]"
                                         onBlur={(e) => {
                                             const val = parseInt(e.target.value);
                                             if (!isNaN(val)) e.target.value = val.toString().padStart(2, '0');
@@ -109,7 +157,46 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
                                         min="0"
                                         max="59"
                                         {...register('minute', { required: true, min: 0, max: 59 })}
-                                        className="w-full px-2 py-3 bg-gray-50 rounded-xl border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] text-center font-mono placeholder-[#667280] text-[#342b14] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        className="w-full px-2 py-3 bg-gray-50 rounded-xl border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] text-center font-mono placeholder-[#667280] text-[#342b14]"
+                                        onBlur={(e) => {
+                                            const val = parseInt(e.target.value);
+                                            if (!isNaN(val)) e.target.value = val.toString().padStart(2, '0');
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* End Time */}
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-[#554030] ml-1 flex items-center gap-1">
+                                <Clock className="w-3 h-3 text-red-400" />
+                                <span>{t('itinerary.endTime', 'End Time')}</span>
+                            </label>
+                            <div className="flex gap-2 items-center">
+                                <div className="relative flex-1">
+                                    <input
+                                        type="number"
+                                        placeholder="10"
+                                        min="0"
+                                        max="23"
+                                        {...register('endHour', { required: true, min: 0, max: 23 })}
+                                        className="w-full px-2 py-3 bg-gray-50 rounded-xl border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] text-center font-mono placeholder-[#667280] text-[#342b14]"
+                                        onBlur={(e) => {
+                                            const val = parseInt(e.target.value);
+                                            if (!isNaN(val)) e.target.value = val.toString().padStart(2, '0');
+                                        }}
+                                    />
+                                </div>
+                                <span className="text-[#a39992] font-bold">:</span>
+                                <div className="relative flex-1">
+                                    <input
+                                        type="number"
+                                        placeholder="00"
+                                        min="0"
+                                        max="59"
+                                        {...register('endMinute', { required: true, min: 0, max: 59 })}
+                                        className="w-full px-2 py-3 bg-gray-50 rounded-xl border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] text-center font-mono placeholder-[#667280] text-[#342b14]"
                                         onBlur={(e) => {
                                             const val = parseInt(e.target.value);
                                             if (!isNaN(val)) e.target.value = val.toString().padStart(2, '0');
@@ -120,7 +207,7 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
                         </div>
 
                         {/* Category */}
-                        <div className="space-y-1">
+                        <div className="space-y-1 col-span-1 sm:col-span-2">
                             <label className="text-xs font-bold text-[#554030] ml-1">{t('itinerary.category', 'Category')}</label>
                             <div className="grid grid-cols-4 gap-2">
                                 {categories.map((cat) => (
@@ -145,9 +232,6 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
                             initialValue={watch('location')}
                             onChange={(val) => {
                                 setValue('location', val);
-                                // Optional: Reset coords if they type manually?
-                                // setValue('lat', null);
-                                // setValue('lng', null);
                             }}
                             onSelect={(loc) => {
                                 setValue('location', loc.name);

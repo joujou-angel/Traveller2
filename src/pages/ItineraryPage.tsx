@@ -1,10 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, FileText, MoreVertical, Upload, Download } from 'lucide-react';
 import DayView from '../features/itinerary/components/DayView';
 import ItineraryForm from '../features/itinerary/components/ItineraryForm';
 import TripMap from '../features/itinerary/components/TripMap';
+import { generateMarkdown, downloadMarkdown } from '../features/itinerary/utils/exportUtils';
+import { generateExcel, downloadExcel, parseExcel } from '../features/itinerary/utils/excelUtils';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -33,6 +35,8 @@ export default function ItineraryPage() {
     const [activeDayIndex, setActiveDayIndex] = useState(0);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<any>(null); // If null, it's Add mode
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // 1. Fetch Trip Dates
     const { data: tripInfo, isLoading, error } = useQuery({
@@ -88,20 +92,13 @@ export default function ItineraryPage() {
 
     // Mutations
     const upsertMutation = useMutation({
-        mutationFn: async (formData: any) => {
-            const payload = {
-                ...formData,
-                trip_id: tripId, // Add trip_id
-                // Ensure date is set to the currently active tab's date
-                date: days[activeDayIndex].date
-            };
-
-            if (editingItem) {
+        mutationFn: async (payload: any) => {
+            if (payload.id) {
                 // Update
                 const { error } = await supabase
                     .from('itineraries')
                     .update(payload)
-                    .eq('id', editingItem.id);
+                    .eq('id', payload.id);
                 if (error) throw error;
             } else {
                 // Insert
@@ -135,6 +132,118 @@ export default function ItineraryPage() {
 
     const handleFormSubmit = (data: any) => {
         upsertMutation.mutate(data);
+    };
+
+    const handleExport = async () => {
+        if (!tripInfo) return;
+
+        try {
+            // 1. Fetch ALL Itinerary Items
+            const { data: allItems, error: itemsError } = await supabase
+                .from('itineraries')
+                .select('*')
+                .eq('trip_id', tripId);
+
+            if (itemsError) throw itemsError;
+
+            // 2. Fetch ALL Expenses
+            const { data: allExpenses, error: expError } = await supabase
+                .from('expenses')
+                .select('*')
+                .eq('trip_id', tripId);
+
+            if (expError) throw expError;
+
+            // 3. Generate Markdown
+            const mdContent = generateMarkdown(
+                {
+                    destination: tripInfo.destination,
+                    startDate: tripInfo.startDate,
+                    endDate: tripInfo.endDate
+                },
+                allItems || [],
+                allExpenses || []
+            );
+
+            // 4. Download
+            downloadMarkdown(`${tripInfo.destination}_Itinerary.md`, mdContent);
+            setIsMenuOpen(false);
+
+        } catch (error) {
+            console.error("Export failed", error);
+            alert("Export failed. Please try again.");
+        }
+    }
+
+
+    const handleExcelExport = async () => {
+        if (!tripInfo) return;
+
+        try {
+            const { data: allItems } = await supabase.from('itineraries').select('*').eq('trip_id', tripId);
+            const { data: allExpenses } = await supabase.from('expenses').select('*').eq('trip_id', tripId);
+
+            const blob = generateExcel(
+                {
+                    destination: tripInfo.destination,
+                    startDate: tripInfo.startDate,
+                    endDate: tripInfo.endDate
+                },
+                allItems || [],
+                allExpenses || []
+            );
+            downloadExcel(`${tripInfo.destination}_Data.xlsx`, blob);
+            setIsMenuOpen(false);
+        } catch (error) {
+            console.error("Excel Export failed", error);
+            alert("Excel export failed.");
+        }
+    };
+
+    const handleImportClick = () => {
+        fileInputRef.current?.click();
+        setIsMenuOpen(false);
+    };
+
+    const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !tripInfo) return;
+
+        try {
+            const { itinerary, expenses } = await parseExcel(file);
+
+            // Upsert Itinerary
+            if (itinerary.length > 0) {
+                const itemsToInsert = itinerary.map((item: any) => ({
+                    ...item,
+                    trip_id: tripId
+                }));
+                // Use insert for simplicity as IDs might conflict or be missing.
+                const { error } = await supabase.from('itineraries').insert(itemsToInsert);
+                if (error) throw error;
+            }
+
+            // Upsert Expenses
+            if (expenses.length > 0) {
+                const expensesToInsert = expenses.map((exp: any) => ({
+                    ...exp,
+                    trip_id: tripId,
+                    split_details: {} // Default empty if missing
+                }));
+                const { error } = await supabase.from('expenses').insert(expensesToInsert);
+                if (error) throw error;
+            }
+
+            alert(`${t('common.success', 'Success')}! Imported ${itinerary.length} items and ${expenses.length} expenses.`);
+            queryClient.invalidateQueries({ queryKey: ['itineraries', tripId] });
+            queryClient.invalidateQueries({ queryKey: ['expenses', tripId] });
+
+        } catch (error: any) {
+            console.error("Import failed", error);
+            alert(`Import failed: ${error.message}`);
+        } finally {
+            if (fileInputRef.current) fileInputRef.current.value = ''; // Reset
+        }
     };
 
     // Auto-scroll active tab into view
@@ -179,10 +288,10 @@ export default function ItineraryPage() {
         <div className="h-full flex flex-col bg-page-bg">
 
             {/* Sticky Header with Tabs */}
-            <div className="sticky top-0 bg-page-bg/95 backdrop-blur-sm z-10 border-b border-gray-100 shadow-sm">
+            <div className="sticky top-0 bg-page-bg/95 backdrop-blur-sm z-10 border-b border-gray-100 shadow-sm flex items-center">
                 <div
                     ref={scrollContainerRef}
-                    className="px-4 py-3 pb-2 overflow-x-auto flex gap-2 snap-x scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
+                    className="flex-1 px-4 py-3 pb-2 overflow-x-auto flex gap-2 snap-x scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
                 >
                     {days.map((day, idx) => (
                         <button
@@ -204,6 +313,62 @@ export default function ItineraryPage() {
                             )}
                         </button>
                     ))}
+                </div>
+
+                {/* Export Button */}
+                {/* Action Menu */}
+                <div className="relative mr-4 z-20">
+                    <button
+                        onClick={() => setIsMenuOpen(!isMenuOpen)}
+                        className="p-2 bg-white rounded-full shadow-sm border border-gray-100 text-gray-600 hover:text-gray-900 transition-colors"
+                    >
+                        <MoreVertical className="w-5 h-5" />
+                    </button>
+
+                    {isMenuOpen && (
+                        <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden flex flex-col py-1">
+                            <button
+                                onClick={handleExport}
+                                className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-sm text-gray-700 transition-colors"
+                            >
+                                <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
+                                    <FileText className="w-3.5 h-3.5" />
+                                </div>
+                                {t('export.notion', 'Export Notion')}
+                            </button>
+
+                            <button
+                                onClick={handleExcelExport}
+                                className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-sm text-gray-700 transition-colors"
+                            >
+                                <div className="w-6 h-6 rounded-full bg-green-50 flex items-center justify-center text-green-600">
+                                    <Download className="w-3.5 h-3.5" />
+                                </div>
+                                {t('export.backup', 'Backup Excel')}
+                            </button>
+
+                            <div className="h-[1px] bg-gray-100 my-1 mx-2"></div>
+
+                            <button
+                                onClick={handleImportClick}
+                                className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-sm text-gray-700 transition-colors"
+                            >
+                                <div className="w-6 h-6 rounded-full bg-orange-50 flex items-center justify-center text-orange-500">
+                                    <Upload className="w-3.5 h-3.5" />
+                                </div>
+                                {t('export.restore', 'Restore Data')}
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Hidden File Input */}
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept=".xlsx"
+                        className="hidden"
+                        onChange={handleFileImport}
+                    />
                 </div>
             </div>
 

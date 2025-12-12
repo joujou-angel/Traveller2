@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ExternalLink, Edit2, Trash2, Bus, Utensils, Bed, Camera, ChevronDown, ChevronUp } from 'lucide-react';
 
+
 interface ItineraryItemProps {
     item: any;
     onEdit: (item: any) => void;
@@ -33,7 +34,7 @@ export default function ItineraryItem({ item, onEdit, onDelete, isReadOnly = fal
     const timeStr = item.start_time ? item.start_time.split(':').slice(0, 2).join(':') : '--:--';
 
     return (
-        <div className="group relative pl-4 pb-8 border-l-2 border-gray-100 last:border-0 last:pb-0">
+        <div className="group relative pl-4 pb-8 border-l-2 border-gray-300 last:border-0 last:pb-0">
             {/* Timeline Dot */}
             <div className={`absolute -left-[9px] top-0 w-4 h-4 rounded-full border-2 border-white shadow-sm ${item.category === 'transport' ? 'bg-btn' : 'bg-negative'}`}></div>
 
@@ -44,7 +45,11 @@ export default function ItineraryItem({ item, onEdit, onDelete, isReadOnly = fal
                     onClick={() => setIsExpanded(!isExpanded)}
                 >
                     {/* Time */}
-                    <span className="text-sm font-bold text-gray-600 font-mono whitespace-nowrap min-w-[2.5rem]">{timeStr}</span>
+                    {/* Time */}
+                    <span className="text-sm font-bold text-gray-600 font-mono whitespace-nowrap min-w-[5.5rem]">
+                        {timeStr}
+                        {item.endTime && <span className="text-gray-400"> - {item.endTime}</span>}
+                    </span>
 
                     {/* Icon */}
                     <div className={`p-2 rounded-xl border flex-shrink-0 ${colorClass}`}>
@@ -52,7 +57,9 @@ export default function ItineraryItem({ item, onEdit, onDelete, isReadOnly = fal
                     </div>
 
                     {/* Location (Main Content) */}
-                    <h3 className="flex-1 font-bold text-gray-800 text-lg leading-tight truncate">{item.location}</h3>
+                    <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-gray-800 text-lg leading-tight truncate">{item.location}</h3>
+                    </div>
 
                     {/* Toggle Icon */}
                     <div className="text-gray-300 group-hover:text-gray-500 transition-colors">

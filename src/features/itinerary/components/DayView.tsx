@@ -48,21 +48,58 @@ export default function DayView({ tripId, date, onEdit, isReadOnly = false, item
             </div>
 
             {/* List */}
-            <div className="space-y-0">
+            <div className="space-y-0 relative">
                 {items && items.length > 0 ? (
-                    items.map((item: any) => (
-                        <ItineraryItem
-                            key={item.id}
-                            item={item}
-                            onEdit={onEdit}
-                            isReadOnly={isReadOnly}
-                            onDelete={(id) => {
-                                if (confirm(t('common.confirmDelete', 'Are you sure you want to delete this item?'))) {
-                                    deleteMutation.mutate(id);
-                                }
-                            }}
-                        />
-                    ))
+                    items.map((item: any, index: number) => {
+                        // Calculate End Time
+                        const [h, m] = item.start_time.split(':').map(Number);
+                        const duration = item.duration || 60; // Default 60 if missing
+                        const startDate = new Date();
+                        startDate.setHours(h, m, 0, 0);
+                        const endDate = new Date(startDate.getTime() + duration * 60000);
+                        const endTimeStr = `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
+
+                        // Calculate Gap to Next
+                        let gapElement = null;
+                        if (index < items.length - 1) {
+                            const nextItem = items[index + 1];
+                            const [nh, nm] = nextItem.start_time.split(':').map(Number);
+                            const nextDate = new Date();
+                            nextDate.setHours(nh, nm, 0, 0);
+
+                            // If next day? Assume same day sorting for now.
+                            // Diff in minutes
+                            const diffMs = nextDate.getTime() - endDate.getTime();
+                            const diffMins = Math.floor(diffMs / 60000);
+
+                            const isNegative = diffMins < 0;
+
+                            gapElement = (
+                                <div className="pl-4 border-l-2 border-dashed border-gray-300 h-12 flex items-center relative my-0">
+                                    <div className={`absolute -left-[14px] bg-white border border-gray-200 text-[10px] font-bold text-gray-400 px-1.5 py-0.5 rounded-full shadow-sm z-10
+                                         ${isNegative ? 'text-red-500 border-red-200 bg-red-50' : ''}`}>
+                                        {isNegative ? '⚠️ ' : ''}{diffMins}m
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <div key={item.id}>
+                                <ItineraryItem
+                                    item={{ ...item, endTime: endTimeStr }} // Pass calculated end time to item if needed, but Item might not accept it yet.
+                                    onEdit={onEdit}
+                                    isReadOnly={isReadOnly}
+                                    onDelete={(id) => {
+                                        if (confirm(t('common.confirmDelete', 'Are you sure you want to delete this item?'))) {
+                                            deleteMutation.mutate(id);
+                                        }
+                                    }}
+                                />
+                                {gapElement}
+                            </div>
+                        );
+                    })
                 ) : (
                     <div className="text-center py-12 border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/50 relative overflow-hidden">
                         <p className="text-gray-400 mb-2">{t('itinerary.noItems', 'No items for this day')}</p>

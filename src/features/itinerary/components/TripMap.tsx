@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useEffect } from 'react';
@@ -51,8 +51,8 @@ export default function TripMap({ items }: TripMapProps) {
     return (
         <MapContainer center={center} zoom={13} style={{ height: '300px', width: '100%', borderRadius: '1rem', zIndex: 0 }}>
             <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
             />
             {validItems.map((item) => (
                 <Marker key={item.id} position={[item.lat, item.lng]}>
@@ -62,6 +62,12 @@ export default function TripMap({ items }: TripMapProps) {
                     </Popup>
                 </Marker>
             ))}
+            {validItems.length > 1 && (
+                <Polyline
+                    positions={validItems.map(item => [item.lat, item.lng])}
+                    pathOptions={{ color: '#3B82F6', weight: 3, opacity: 0.7, dashArray: '10, 10' }}
+                />
+            )}
             <MapUpdater items={validItems} />
         </MapContainer>
     );
