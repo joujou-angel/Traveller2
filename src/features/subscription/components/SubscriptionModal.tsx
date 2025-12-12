@@ -1,6 +1,5 @@
 import { X, Check, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../features/auth/AuthContext';
@@ -15,7 +14,6 @@ export const SubscriptionModal = ({ isOpen, onClose }: SubscriptionModalProps) =
     const { t } = useTranslation();
     const { user } = useAuth();
     const queryClient = useQueryClient();
-    const [isProcessing, setIsProcessing] = useState(false);
 
     // Mock Upgrade Mutation
     const upgradeMutation = useMutation({

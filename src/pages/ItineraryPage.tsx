@@ -1,12 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Loader2, Plus, FileText, MoreVertical, Upload, Download } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import DayView from '../features/itinerary/components/DayView';
 import ItineraryForm from '../features/itinerary/components/ItineraryForm';
 import TripMap from '../features/itinerary/components/TripMap';
-import { generateMarkdown, downloadMarkdown } from '../features/itinerary/utils/exportUtils';
-import { generateExcel, downloadExcel, parseExcel } from '../features/itinerary/utils/excelUtils';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -35,8 +33,6 @@ export default function ItineraryPage() {
     const [activeDayIndex, setActiveDayIndex] = useState(0);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<any>(null); // If null, it's Add mode
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // 1. Fetch Trip Dates
     const { data: tripInfo, isLoading, error } = useQuery({
@@ -138,118 +134,6 @@ export default function ItineraryPage() {
         });
     };
 
-    const handleExport = async () => {
-        if (!tripInfo) return;
-
-        try {
-            // 1. Fetch ALL Itinerary Items
-            const { data: allItems, error: itemsError } = await supabase
-                .from('itineraries')
-                .select('*')
-                .eq('trip_id', tripId);
-
-            if (itemsError) throw itemsError;
-
-            // 2. Fetch ALL Expenses
-            const { data: allExpenses, error: expError } = await supabase
-                .from('expenses')
-                .select('*')
-                .eq('trip_id', tripId);
-
-            if (expError) throw expError;
-
-            // 3. Generate Markdown
-            const mdContent = generateMarkdown(
-                {
-                    destination: tripInfo.destination,
-                    startDate: tripInfo.startDate,
-                    endDate: tripInfo.endDate
-                },
-                allItems || [],
-                allExpenses || []
-            );
-
-            // 4. Download
-            downloadMarkdown(`${tripInfo.destination}_Itinerary.md`, mdContent);
-            setIsMenuOpen(false);
-
-        } catch (error) {
-            console.error("Export failed", error);
-            alert("Export failed. Please try again.");
-        }
-    }
-
-
-    const handleExcelExport = async () => {
-        if (!tripInfo) return;
-
-        try {
-            const { data: allItems } = await supabase.from('itineraries').select('*').eq('trip_id', tripId);
-            const { data: allExpenses } = await supabase.from('expenses').select('*').eq('trip_id', tripId);
-
-            const blob = generateExcel(
-                {
-                    destination: tripInfo.destination,
-                    startDate: tripInfo.startDate,
-                    endDate: tripInfo.endDate
-                },
-                allItems || [],
-                allExpenses || []
-            );
-            downloadExcel(`${tripInfo.destination}_Data.xlsx`, blob);
-            setIsMenuOpen(false);
-        } catch (error) {
-            console.error("Excel Export failed", error);
-            alert("Excel export failed.");
-        }
-    };
-
-    const handleImportClick = () => {
-        fileInputRef.current?.click();
-        setIsMenuOpen(false);
-    };
-
-    const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file || !tripInfo) return;
-
-        try {
-            const { itinerary, expenses } = await parseExcel(file);
-
-            // Upsert Itinerary
-            if (itinerary.length > 0) {
-                const itemsToInsert = itinerary.map((item: any) => ({
-                    ...item,
-                    trip_id: tripId
-                }));
-                // Use insert for simplicity as IDs might conflict or be missing.
-                const { error } = await supabase.from('itineraries').insert(itemsToInsert);
-                if (error) throw error;
-            }
-
-            // Upsert Expenses
-            if (expenses.length > 0) {
-                const expensesToInsert = expenses.map((exp: any) => ({
-                    ...exp,
-                    trip_id: tripId,
-                    split_details: {} // Default empty if missing
-                }));
-                const { error } = await supabase.from('expenses').insert(expensesToInsert);
-                if (error) throw error;
-            }
-
-            alert(`${t('common.success', 'Success')}! Imported ${itinerary.length} items and ${expenses.length} expenses.`);
-            queryClient.invalidateQueries({ queryKey: ['itineraries', tripId] });
-            queryClient.invalidateQueries({ queryKey: ['expenses', tripId] });
-
-        } catch (error: any) {
-            console.error("Import failed", error);
-            alert(`Import failed: ${error.message}`);
-        } finally {
-            if (fileInputRef.current) fileInputRef.current.value = ''; // Reset
-        }
-    };
-
     // Auto-scroll active tab into view
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
@@ -324,15 +208,7 @@ export default function ItineraryPage() {
                 {/* 
                    <ActionMenu /> code was here. 
                    Restoring requires uncommenting valid JSX or reverting.
-                   For now, we just keep the file input below.
                 */}
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    accept=".xlsx"
-                    className="hidden"
-                    onChange={handleFileImport}
-                />
             </div>
 
             {/* Content Area */}
