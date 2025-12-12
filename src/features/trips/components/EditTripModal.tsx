@@ -117,12 +117,43 @@ export const EditTripModal = ({ isOpen, onClose, trip }: EditTripModalProps) => 
 
     const leaveTripMutation = useMutation({
         mutationFn: async (tripId: string) => {
-            const { error } = await supabase
+            // 1. Remove name from trip_config.companions
+            // We do this FIRST because if we remove the member row first, we might lose RLS write permission to trip_config.
+
+            // A. Get User Name
+            const userName = user?.user_metadata?.name || user?.email?.split('@')[0];
+
+            if (userName) {
+                // B. Fetch current companions
+                const { data: configData, error: configError } = await supabase
+                    .from('trip_config')
+                    .select('id, companions')
+                    .eq('trip_id', tripId)
+                    .single();
+
+                if (!configError && configData) {
+                    const currentCompanions = configData.companions || [];
+                    // C. Filter out user name (Case insensitive check)
+                    const newCompanions = currentCompanions.filter((c: string) => c.toLowerCase() !== userName.toLowerCase());
+
+                    // Only update if changes found
+                    if (newCompanions.length !== currentCompanions.length) {
+                        await supabase
+                            .from('trip_config')
+                            .update({ companions: newCompanions })
+                            .eq('id', configData.id);
+                        // We ignore update errors here to ensure we still proceed to leave the trip
+                    }
+                }
+            }
+
+            // 2. Remove from trip_members
+            const { error: memberError } = await supabase
                 .from('trip_members')
                 .delete()
                 .eq('trip_id', tripId)
                 .eq('user_id', user?.id);
-            if (error) throw error;
+            if (memberError) throw memberError;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['trips'] });

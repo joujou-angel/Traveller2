@@ -51,10 +51,10 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
         } else {
             // Default: Start 09:00, End 10:00
             reset({
-                hour: '09',
-                minute: '00',
-                endHour: '10',
-                endMinute: '00',
+                hour: '',
+                minute: '',
+                endHour: '',
+                endMinute: '',
                 category: 'activity',
                 location: '',
                 lat: null, lng: null, google_map_link: '', notes: ''
@@ -144,7 +144,7 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
                                         min="0"
                                         max="23"
                                         {...register('hour', { required: true, min: 0, max: 23 })}
-                                        className="w-full px-2 py-3 bg-gray-50 rounded-xl border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] text-center font-mono placeholder-[#667280] text-[#342b14]"
+                                        className="w-full px-2 py-3 bg-gray-50 rounded-xl border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] text-center font-mono placeholder-[#667280] text-[#342b14] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         onBlur={(e) => {
                                             const val = parseInt(e.target.value);
                                             if (!isNaN(val)) e.target.value = val.toString().padStart(2, '0');
@@ -159,7 +159,7 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
                                         min="0"
                                         max="59"
                                         {...register('minute', { required: true, min: 0, max: 59 })}
-                                        className="w-full px-2 py-3 bg-gray-50 rounded-xl border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] text-center font-mono placeholder-[#667280] text-[#342b14]"
+                                        className="w-full px-2 py-3 bg-gray-50 rounded-xl border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] text-center font-mono placeholder-[#667280] text-[#342b14] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         onBlur={(e) => {
                                             const val = parseInt(e.target.value);
                                             if (!isNaN(val)) e.target.value = val.toString().padStart(2, '0');
@@ -183,7 +183,7 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
                                         min="0"
                                         max="23"
                                         {...register('endHour', { required: true, min: 0, max: 23 })}
-                                        className="w-full px-2 py-3 bg-gray-50 rounded-xl border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] text-center font-mono placeholder-[#667280] text-[#342b14]"
+                                        className="w-full px-2 py-3 bg-gray-50 rounded-xl border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] text-center font-mono placeholder-[#667280] text-[#342b14] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         onBlur={(e) => {
                                             const val = parseInt(e.target.value);
                                             if (!isNaN(val)) e.target.value = val.toString().padStart(2, '0');
@@ -198,7 +198,7 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
                                         min="0"
                                         max="59"
                                         {...register('endMinute', { required: true, min: 0, max: 59 })}
-                                        className="w-full px-2 py-3 bg-gray-50 rounded-xl border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] text-center font-mono placeholder-[#667280] text-[#342b14]"
+                                        className="w-full px-2 py-3 bg-gray-50 rounded-xl border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] text-center font-mono placeholder-[#667280] text-[#342b14] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         onBlur={(e) => {
                                             const val = parseInt(e.target.value);
                                             if (!isNaN(val)) e.target.value = val.toString().padStart(2, '0');
