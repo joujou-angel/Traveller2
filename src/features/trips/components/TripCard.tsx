@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, Edit2, Crown, Share2 } from 'lucide-react';
+import { Calendar, MapPin, Edit2, Crown, Share2, Archive } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -11,9 +11,10 @@ interface TripCardProps {
     trip: Trip;
     currentUserId?: string;
     onEditClick: (e: React.MouseEvent, trip: Trip) => void;
+    onArchiveClick?: (e: React.MouseEvent, trip: Trip) => void;
 }
 
-export const TripCard = ({ trip, currentUserId, onEditClick }: TripCardProps) => {
+export const TripCard = ({ trip, currentUserId, onEditClick, onArchiveClick }: TripCardProps) => {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const { i18n } = useTranslation();
@@ -27,7 +28,7 @@ export const TripCard = ({ trip, currentUserId, onEditClick }: TripCardProps) =>
     return (
         <div
             onClick={handleCardClick}
-            className="group bg-white rounded-3xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer border border-transparent hover:border-btn/30 active:scale-98"
+            className={`group bg-white rounded-3xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer border border-transparent hover:border-btn/30 active:scale-98 ${trip.status === 'archived' ? 'opacity-75 grayscale' : ''}`}
         >
             <div className="flex gap-4">
                 {/* Cover Image - Smaller size */}
@@ -109,7 +110,16 @@ export const TripCard = ({ trip, currentUserId, onEditClick }: TripCardProps) =>
                         </div>
 
                         {/* Actions Buttons */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                            {trip.user_id === currentUserId && onArchiveClick && (
+                                <button
+                                    onClick={(e) => onArchiveClick(e, trip)}
+                                    className="p-2 text-gray-400 hover:text-btn hover:bg-orange-50 rounded-xl transition-colors"
+                                    title={trip.status === 'archived' ? 'Unarchive' : 'Archive'}
+                                >
+                                    <Archive className="w-4 h-4" />
+                                </button>
+                            )}
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();

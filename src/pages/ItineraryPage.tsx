@@ -131,7 +131,11 @@ export default function ItineraryPage() {
     };
 
     const handleFormSubmit = (data: any) => {
-        upsertMutation.mutate(data);
+        upsertMutation.mutate({
+            ...data,
+            trip_id: tripId,
+            date: activeDate
+        });
     };
 
     const handleExport = async () => {

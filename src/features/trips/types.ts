@@ -8,4 +8,6 @@ export type Trip = {
     end_date: string;   // Real DB column
     user_id: string;    // Owner ID
     trip_config?: { companions: string[] } | { companions: string[] }[]; // Handle potential array return
+    status?: string; // 'active' | 'archived'
+    is_unlocked?: boolean;
 };

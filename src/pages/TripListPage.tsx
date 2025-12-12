@@ -1,33 +1,54 @@
-import { Plus, LogOut, Loader2 } from 'lucide-react';
+import { Plus, LogOut, Loader2, Info } from 'lucide-react';
 import { useAuth } from '../features/auth/AuthContext';
 import { TravellerLogo } from '../components/TravellerLogo';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useState } from 'react';
 import type { Trip } from '../features/trips/types';
 import { TripCard } from '../features/trips/components/TripCard';
 import { CreateTripModal } from '../features/trips/components/CreateTripModal';
 import { EditTripModal } from '../features/trips/components/EditTripModal';
+import { SubscriptionModal } from '../features/subscription/components/SubscriptionModal';
 import { LanguageSwitcher } from '../features/settings/components/LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 const TripListPage = () => {
     const { t } = useTranslation();
     const { user, signOut } = useAuth();
+    const queryClient = useQueryClient();
+
+    // Modals State
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+
+    // Fetch Profile (Subscription Status)
+    const { data: profile } = useQuery({
+        queryKey: ['profile', user?.id],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user?.id)
+                .single();
+            // Allow 406/Not Found for early dev, default to free
+            if (error && error.code !== 'PGRST116') console.warn('Profile fetch error', error);
+            return data || { subscription_status: 'free', lifetime_trip_count: 0 };
+        },
+        enabled: !!user?.id
+    });
 
     // Fetch Trips from Supabase
     const { data: trips, isLoading } = useQuery({
         queryKey: ['trips'],
         queryFn: async () => {
             // RLS policies now handle access control (Owners + Members)
-            // Just select * from trips and let Supabase filter it for us.
             const { data, error } = await supabase
                 .from('trips')
                 .select('*, trip_config(companions)')
-                .order('start_date', { ascending: true });
+                .order('start_date', { ascending: true }); // We sort manually later
 
             if (error) throw error;
             return data as Trip[];
@@ -35,17 +56,81 @@ const TripListPage = () => {
         enabled: !!user?.id
     });
 
+    // Archive Mutation
+    const updateTripStatusMutation = useMutation({
+        mutationFn: async ({ id, status }: { id: string, status: string }) => {
+            const { error } = await supabase.from('trips').update({ status }).eq('id', id);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['trips'] });
+            toast.success(t('common.success', 'Success'));
+        },
+        onError: (err) => {
+            toast.error('Failed to update status');
+            console.error(err);
+        }
+    });
+
+    const activeTrips = trips?.filter(t => t.status !== 'archived') || [];
+    const archivedTrips = trips?.filter(t => t.status === 'archived') || [];
+
     const handleEditClick = (e: React.MouseEvent, trip: Trip) => {
         e.stopPropagation(); // Prevent navigating to trip details
         setEditingTrip(trip);
         setIsEditModalOpen(true);
     };
 
+    const handleArchiveClick = (e: React.MouseEvent, trip: Trip) => {
+        e.stopPropagation();
+        if (trip.status === 'archived') {
+            // Unarchive Logic
+            // Check limits before unarchiving?
+            // "Free users can only have 1 active trip"
+            if (profile?.subscription_status === 'free' && activeTrips.length >= 1) {
+                toast.error(t('subscription.limitActive', 'Free plan allows only 1 active trip. Please archive another trip first.'));
+                return;
+            }
+            updateTripStatusMutation.mutate({ id: trip.id, status: 'active' });
+        } else {
+            // Archive Logic
+            if (confirm(t('trip.confirmArchive', 'Archive this trip? It will become read-only until unarchived.'))) {
+                updateTripStatusMutation.mutate({ id: trip.id, status: 'archived' });
+            }
+        }
+    };
+
+    const handleCreateClick = () => {
+        // Enforce Limits
+        const isFree = profile?.subscription_status === 'free';
+        // const lifetimeCount = profile?.lifetime_trip_count || 0; // Use DB count or trips length
+        // We can use local trips length as a proxy for "Created Trips" if we trust the user hasn't deleted them. 
+        // For stricter check, we rely on DB profile count, but let's use trips.length + archivedTrips.length for "Lifetime" approximation if profile count is 0.
+        // Actually, just checking total trips owned by user is safer.
+        const myTripsCount = trips?.filter(t => t.user_id === user?.id).length || 0;
+
+        if (isFree) {
+            // 1. Check Active Limit
+            if (activeTrips.filter(t => t.user_id === user?.id).length >= 1) {
+                toast.warning(t('subscription.activeLimitWarning', 'You have an active trip. Please archive it to create a new one.'));
+                return;
+            }
+
+            // 2. Check Lifetime Limit (Hard Paywall)
+            if (myTripsCount >= 3) {
+                setIsSubscriptionModalOpen(true);
+                return;
+            }
+        }
+
+        setIsCreateModalOpen(true);
+    };
+
     return (
         <div className="min-h-screen bg-page-bg pb-24">
             {/* Header */}
             <div className="bg-white px-6 pt-10 pb-6 shadow-sm sticky top-0 z-10 border-b border-gray-50">
-                <div className="flex justify-between items-start">
+                <div className="flex justify-between items-center">
                     {/* Brand Area */}
                     <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -53,17 +138,13 @@ const TripListPage = () => {
                             <h1 className="text-2xl font-bold text-page-title tracking-tight">Traveller</h1>
                         </div>
                         <p className="text-[10px] text-sub-title font-medium tracking-widest pl-1">
-                            {t('tripList.subtitle', 'PLAN YOUR NEXT ADVENTURE')}
+                            {profile?.subscription_status === 'pro' ? 'PRO MEMBER' : t('tripList.subtitle', 'PLAN YOUR NEXT ADVENTURE')}
                         </p>
                     </div>
 
                     {/* User Area */}
                     <div className="flex items-center gap-2 pt-1">
                         <LanguageSwitcher />
-                        <div className="text-right hidden sm:block">
-                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{t('tripList.welcome', 'Welcome')}</p>
-                            <p className="text-sm font-bold text-main-title">{user?.user_metadata?.name || user?.email?.split('@')[0] || 'Guest'}</p>
-                        </div>
                         <button
                             onClick={signOut}
                             className="p-2.5 bg-gray-50 border border-gray-100 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
@@ -74,32 +155,85 @@ const TripListPage = () => {
                 </div>
             </div>
 
+            {/* Free Plan Limits Banner */}
+            {profile?.subscription_status !== 'pro' && (
+                <div className="bg-orange-50 px-6 py-3 border-b border-orange-100 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs font-bold text-orange-800">
+                        <Info className="w-4 h-4 text-orange-500" />
+                        <span>{t('subscription.banner', 'Free Plan: Max 3 trips total • Max 1 active trip')}</span>
+                    </div>
+                    <button
+                        onClick={() => setIsSubscriptionModalOpen(true)}
+                        className="text-[10px] font-bold bg-white border border-orange-200 text-orange-600 px-2 py-1 rounded-full shadow-sm active:scale-95"
+                    >
+                        {t('subscription.upgradeBtn', 'UPGRADE')}
+                    </button>
+                </div>
+            )}
+
             {/* Trip List */}
             <div className="p-6 space-y-6">
-                <div className="flex justify-between items-center">
-                    <h2 className="text-lg font-bold text-gray-700">{t('tripList.myTrips', 'My Trips')}</h2>
-                    <span className="text-sm text-gray-400 bg-white px-3 py-1 rounded-full shadow-sm">{trips?.length || 0} {t('tripList.plans', 'Plans')}</span>
+
+                {/* Active Trips */}
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-lg font-bold text-gray-700 flex items-center gap-2">
+                            🚀 {t('tripList.activeTrips', 'Active Trips')}
+                        </h2>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-400 font-mono bg-white px-2 py-1 rounded-md border">
+                                {activeTrips.length} / {profile?.subscription_status === 'pro' ? '∞' : '1'}
+                            </span>
+                        </div>
+                    </div>
+
+                    {isLoading ? (
+                        <div className="flex justify-center py-10">
+                            <Loader2 className="w-8 h-8 animate-spin text-sub-title" />
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {activeTrips.length > 0 ? (
+                                activeTrips.map(trip => (
+                                    <TripCard
+                                        key={trip.id}
+                                        trip={trip}
+                                        currentUserId={user?.id}
+                                        onEditClick={handleEditClick}
+                                        onArchiveClick={handleArchiveClick}
+                                    />
+                                ))
+                            ) : (
+                                <p className="text-sm text-gray-400 italic text-center py-4 bg-gray-50/50 rounded-2xl border border-dashed">
+                                    {t('tripList.noActive', 'No active trips.')}
+                                </p>
+                            )}
+                        </div>
+                    )}
                 </div>
 
-                {isLoading ? (
-                    <div className="flex justify-center py-10">
-                        <Loader2 className="w-8 h-8 animate-spin text-sub-title" />
-                    </div>
-                ) : (
+                {/* Archived Trips */}
+                {(archivedTrips.length > 0 || isLoading) && (
                     <div className="space-y-4">
-                        {trips?.map(trip => (
-                            <TripCard
-                                key={trip.id}
-                                trip={trip}
-                                currentUserId={user?.id}
-                                onEditClick={handleEditClick}
-                            />
-                        ))}
+                        <h2 className="text-lg font-bold text-gray-500 flex items-center gap-2 opacity-80">
+                            📦 {t('tripList.archivedTrips', 'Archived')}
+                        </h2>
+                        <div className="space-y-4 opacity-80 hover:opacity-100 transition-opacity">
+                            {archivedTrips.map(trip => (
+                                <TripCard
+                                    key={trip.id}
+                                    trip={trip}
+                                    currentUserId={user?.id}
+                                    onEditClick={handleEditClick}
+                                    onArchiveClick={handleArchiveClick}
+                                />
+                            ))}
+                        </div>
                     </div>
                 )}
             </div>
 
-            {/* Empty State Arrow */}
+            {/* Empty State Arrow (Only if truly empty) */}
             {!isLoading && trips?.length === 0 && (
                 <div className="fixed bottom-40 right-8 z-30 pointer-events-none animate-bounce">
                     <div className="relative">
@@ -116,7 +250,7 @@ const TripListPage = () => {
 
             {/* FAB - Create Trip */}
             <button
-                onClick={() => setIsCreateModalOpen(true)}
+                onClick={handleCreateClick}
                 className="fixed bottom-24 right-6 w-14 h-14 bg-btn text-white rounded-full shadow-lg shadow-gray-200 flex items-center justify-center active:scale-90 transition-all hover:scale-105 z-40"
             >
                 <Plus className="w-6 h-6" />
@@ -126,6 +260,11 @@ const TripListPage = () => {
             <CreateTripModal
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
+            />
+
+            <SubscriptionModal
+                isOpen={isSubscriptionModalOpen}
+                onClose={() => setIsSubscriptionModalOpen(false)}
             />
 
             {editingTrip && (
