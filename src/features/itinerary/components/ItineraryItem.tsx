@@ -65,10 +65,17 @@ export default function ItineraryItem({ item, onEdit, onDelete, isReadOnly = fal
                     onClick={() => setIsExpanded(!isExpanded)}
                 >
                     {/* Time */}
-                    <span className="text-sm font-bold text-gray-600 font-mono whitespace-nowrap min-w-[5.5rem]">
-                        {timeStr}
-                        {item.endTime && <span className="text-gray-400"> - {item.endTime}</span>}
-                    </span>
+                    {/* Time - Vertical Stack for Space Saving */}
+                    <div className="flex flex-col items-start justify-center min-w-[3.2rem]">
+                        <span className="text-sm font-bold text-gray-700 font-mono leading-none">
+                            {timeStr}
+                        </span>
+                        {item.endTime && (
+                            <span className="text-[10px] text-gray-400 font-mono leading-none mt-1">
+                                {item.endTime}
+                            </span>
+                        )}
+                    </div>
 
                     {/* Icon */}
                     <div className={`p-2 rounded-xl border flex-shrink-0 ${colorClass}`}>
