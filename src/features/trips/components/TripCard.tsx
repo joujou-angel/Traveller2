@@ -2,6 +2,9 @@ import { useNavigate } from 'react-router-dom';
 import { Calendar, MapPin, Edit2, Crown, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
+import { prefetchTripWeather } from '../../../hooks/useTripWeather';
 import type { Trip } from '../types';
 
 interface TripCardProps {
@@ -12,10 +15,18 @@ interface TripCardProps {
 
 export const TripCard = ({ trip, currentUserId, onEditClick }: TripCardProps) => {
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
+    const { i18n } = useTranslation();
+
+    const handleCardClick = () => {
+        // Prefetch weather data immediately based on list data (optimistic)
+        prefetchTripWeather(queryClient, trip, i18n.language);
+        navigate(`/trips/${trip.id}/itinerary`);
+    };
 
     return (
         <div
-            onClick={() => navigate(`/trips/${trip.id}/itinerary`)}
+            onClick={handleCardClick}
             className="group bg-white rounded-3xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer border border-transparent hover:border-btn/30 active:scale-98"
         >
             <div className="flex gap-4">

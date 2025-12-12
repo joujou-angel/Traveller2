@@ -8,7 +8,8 @@
         "edit": "Edit",
         "notes": "Notes",
         "clickToAdd": "Click to add",
-        "confirmDelete": "Are you sure you want to delete this item?"
+        "confirmDelete": "Are you sure you want to delete this item?",
+        "noData": "No Data"
     },
     "tripList": {
         "subtitle": "PLAN YOUR NEXT ADVENTURE",
@@ -26,8 +27,6 @@
     },
     "trip": {
         "name": "Name",
-        "destination": "Destination",
-        "dates": "Dates",
         "cover_image": "Cover Image",
         "companions": "Companions",
         "create_new": "Create New Trip",
@@ -59,7 +58,32 @@
     "info": {
         "title": "Trip Info",
         "flights": "Flights",
-        "hotels": "Accommodation"
+        "hotels": "Accommodation",
+        "flightNo": "Flight No.",
+        "pnr": "PNR",
+        "from": "From",
+        "to": "To",
+        "depTime": "Departure",
+        "arrTime": "Arrival",
+        "hotelName": "Hotel Name",
+        "address": "Address",
+        "originalAddress": "Address",
+        "showDriver": "Show Driver",
+        "addressLocal": "Local Address",
+        "phone": "Phone",
+        "notes": "Notes",
+        "add": "Add",
+        "save": "Save Changes",
+        "edit": "Edit Info",
+        "flightNoPlaceholder": "e.g. BR198",
+        "pnrPlaceholder": "e.g. 6ABCDE",
+        "fromPlaceholder": "e.g. TPE",
+        "toPlaceholder": "e.g. NRT",
+        "hotelNamePlaceholder": "Hotel Name",
+        "addressPlaceholder": "Address for display",
+        "addressLocalPlaceholder": "e.g. Tokyo, Shinjuku...",
+        "phonePlaceholder": "e.g. +81 3-1234-5678",
+        "notesPlaceholder": "Notes..."
     },
     "expenses": {
         "title": "Wallet",
@@ -75,17 +99,43 @@
         "amount": "Amount",
         "paidBy": "Paid By",
         "splitWith": "Split With",
-        "everyone": "Everyone",
+        "everyone": "All",
         "people": "{{count}} People",
         "splitDetails": "Split Details",
         "success": "Expense added!",
-        "error": "Failed to add"
+        "error": "Failed to add",
+        "noExpenses": "No expenses yet",
+        "currencyConverter": "Currency Converter"
     },
     "weather": {
         "errorTitle": "Unable to load weather",
         "goToSetup": "Go to Setup",
         "historical": "Historical Estimate",
-        "disclaimer": "Distant dates will show 'Historical Average' for reference."
+        "disclaimer": "Distant dates will show 'Historical Average' for reference.",
+        "codes": {
+            "0": "Clear",
+            "1": "Mostly Clear",
+            "2": "Cloudy",
+            "3": "Overcast",
+            "45": "Fog",
+            "48": "Fog",
+            "51": "Drizzle",
+            "53": "Drizzle",
+            "55": "Drizzle",
+            "61": "Rain",
+            "63": "Rain",
+            "65": "Rain",
+            "71": "Snow",
+            "73": "Snow",
+            "75": "Snow",
+            "80": "Showers",
+            "81": "Showers",
+            "82": "Showers",
+            "95": "Thunderstorm",
+            "96": "Thunderstorm",
+            "99": "Thunderstorm",
+            "unknown": "Unknown"
+        }
     },
     "itinerary": {
         "day": "Day {{count}}",

@@ -173,12 +173,14 @@ src/
 *   **功能**：提供旅程期間的精準天氣預報與歷史氣候參考。
 *   **技術架構**：
     *   **Prefetching**：利用 React Query `prefetchQuery` 在進入 `MainLayout` 時預先載入天氣資料，提升頁面切換體感速度。
-    *   **Smart Hybrid Strategy**：
+        *   **Smart Hybrid Strategy**：
         *   **近期預報 (Forecast)**：針對 14 天內的日期，抓取即時預報。
         *   **歷史推估 (History)**：針對超過 14 天的遠期規劃，自動回溯 **去年同期** 的歷史氣候數據做為參考。
+        *   **Prefetch Optimization**：優化 Waterfall Issue，點擊 Trip Card 時立即平行觸發 `TripConfig` 與 `Coordinates` 查詢，並利用快取的座標資料接續查詢 `Weather`，顯著降低進入頁面的白屏時間。
         *   **Inline Indicator**：歷史數據會在日期旁顯示「雲朵+時鐘」圖示與「歷史推估」標籤，明確區分真實預報與參考數據。
     *   **Geocoding Reliability**：
         *   **City Mapping**：內建台灣各大城市與國際熱門景點的中英對照表 (`CITY_MAPPINGS`)，支援 "台北", "花蓮", "首爾" 等中文地名搜索。
+        *   **Dynamic Language Support**：根據使用者介面語言 (i18n) 自動切換 Geocoding API 請求參數 (如：英文版請求 `New York`，中文版請求 `紐約`)，確保地名顯示正確。
         *   **Fallback Mechanism**：若中文搜尋失敗，自動嘗試無語言參數的模糊搜尋。
 
 ---
@@ -286,6 +288,13 @@ src/
     *   **Trip List**：將旅程卡片日期的顯示格式優化為 `MM/DD-MM/DD` (例：`12/10-12/15`)，提升閱讀性。
 *   **Iconography Standardization**：
     *   **Save Action**：全站統一使用 **Floppy Disk** 圖示作為儲存/建立按鈕，消除原本 Check/Text 混用的不一致體驗。
+
+### 5.7 記帳功能優化 (Expenses Refinement) [12/12 New]
+*   **Transaction Flow**: 優化列表佈局為 `[Payer Avatar] → [Arrow] → [Split Members]` 的直觀動線，提升閱讀性。
+*   **Visual Clarity**: 
+    *   將金額與幣別移至右側獨立顯示，並修正幣別代碼順序。
+    *   分帳成員若為全員，以標籤 **"Everyone/All"** 簡潔顯示；若為部分成員，則以堆疊頭像 (Stacked Avatars) 呈現。
+*   **Localization**: 完整支援中英文切換 (如 "Paid by" vs "由...支付")，並移除硬編碼文字。
 
 ---
 

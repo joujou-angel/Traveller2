@@ -71,8 +71,8 @@ export const AddExpenseModal = ({ isOpen, onClose, tripId, companions }: AddExpe
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
-            <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto flex flex-col">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-white w-full sm:max-w-md rounded-3xl p-6 shadow-2xl animate-fade-in-up max-h-[90vh] overflow-y-auto flex flex-col">
                 <div className="flex justify-between items-center mb-6 flex-shrink-0">
                     <h2 className="text-xl font-bold text-gray-800">{t('expenses.addExpenseTitle', 'Add Expense')}</h2>
                     <button onClick={onClose} className="p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200">
@@ -87,7 +87,7 @@ export const AddExpenseModal = ({ isOpen, onClose, tripId, companions }: AddExpe
                             value={itemName}
                             onChange={(e) => setItemName(e.target.value)}
                             placeholder={t('expenses.itemNamePlaceholder', 'Dinner, Taxi, etc.')}
-                            className="w-full p-4 bg-gray-50 rounded-2xl font-bold text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-black"
+                            className="w-full p-4 bg-gray-50 rounded-2xl font-bold text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:ring-inset"
                             autoFocus
                         />
                     </div>
@@ -98,7 +98,7 @@ export const AddExpenseModal = ({ isOpen, onClose, tripId, companions }: AddExpe
                             <select
                                 value={currency}
                                 onChange={(e) => setCurrency(e.target.value)}
-                                className="w-full p-4 bg-gray-50 rounded-2xl font-bold text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-black"
+                                className="w-full p-4 bg-gray-50 rounded-2xl font-bold text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-black focus:ring-inset"
                             >
                                 {SUPPORTED_CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
@@ -112,7 +112,7 @@ export const AddExpenseModal = ({ isOpen, onClose, tripId, companions }: AddExpe
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
                                     placeholder="0.00"
-                                    className="w-full p-4 pl-8 bg-gray-50 rounded-2xl font-bold text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-black [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    className="w-full p-4 pl-8 bg-gray-50 rounded-2xl font-bold text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:ring-inset [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                 />
                             </div>
                         </div>
@@ -124,7 +124,7 @@ export const AddExpenseModal = ({ isOpen, onClose, tripId, companions }: AddExpe
                             <select
                                 value={payer}
                                 onChange={(e) => setPayer(e.target.value)}
-                                className="w-full p-4 bg-gray-50 rounded-2xl font-bold text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-black"
+                                className="w-full p-4 bg-gray-50 rounded-2xl font-bold text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-black focus:ring-inset"
                             >
                                 {companions.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>

@@ -13,7 +13,7 @@ const HistoricalIcon = () => (
 );
 
 export default function WeatherPage() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { tripId } = useParams();
 
     // Note: Use 'weatherSegments' now instead of raw weatherData
@@ -25,7 +25,7 @@ export default function WeatherPage() {
         error,
         refetch,
         isRefetching
-    } = useTripWeather(tripId);
+    } = useTripWeather(tripId, i18n.language);
 
     // Initial Loading
     if (isLoading && !weatherSegments) {
@@ -85,7 +85,7 @@ export default function WeatherPage() {
                     const currentDate = new Date(day.date);
 
                     // Simple date formatting (using i18n locale would be better, but keeping simple for now)
-                    const dateStr = currentDate.toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric', weekday: 'short' });
+                    const dateStr = currentDate.toLocaleDateString(i18n.language, { month: 'numeric', day: 'numeric', weekday: 'short' });
 
                     return (
                         <div key={day.date} className={`relative p-5 rounded-3xl shadow-sm border flex items-center justify-between overflow-hidden ${day.isHistorical ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-100'}`}>
@@ -103,7 +103,7 @@ export default function WeatherPage() {
                                             </div>
                                         )}
                                     </div>
-                                    <p className="text-sm text-gray-500">{desc}</p>
+                                    <p className="text-sm text-gray-500">{t(desc)}</p>
                                 </div>
                             </div>
                             <div className="text-right">

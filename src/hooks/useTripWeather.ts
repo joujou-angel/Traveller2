@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient, QueryClient } from '@tanstack/react-query';
+import type { Trip } from '../features/trips/types';
 import { supabase } from '../lib/supabase';
 import { addDays, format, isAfter, subYears, parseISO } from 'date-fns';
 
@@ -42,7 +43,7 @@ const CITY_MAPPINGS: Record<string, string> = {
     '馬祖': 'Matsu'
 };
 
-const fetchTripConfig = async (tripId: string) => {
+export const fetchTripConfig = async (tripId: string) => {
     const { data, error } = await supabase
         .from('trip_config')
         .select('*')
@@ -56,10 +57,14 @@ const fetchTripConfig = async (tripId: string) => {
     return data.flight_info;
 };
 
-const fetchCoordinates = async (destination: string) => {
+export const fetchCoordinates = async (destination: string, language: string = 'en') => {
     const searchName = CITY_MAPPINGS[destination.trim()] || destination;
 
-    let response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchName)}&count=1&language=zh&format=json`);
+    // Map common languages to OpenMeteo supported codes if necessary
+    // 'zh-TW' -> 'zh'
+    const apiLang = language.startsWith('zh') ? 'zh' : 'en';
+
+    let response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchName)}&count=1&language=${apiLang}&format=json`);
     let data = await response.json();
 
     if (data.results && data.results.length > 0) {
@@ -86,7 +91,7 @@ export type WeatherSegment = {
     isHistorical: boolean;
 };
 
-const fetchHybridWeather = async (lat: number, long: number, startDateStr: string, endDateStr: string): Promise<WeatherSegment[]> => {
+export const fetchHybridWeather = async (lat: number, long: number, startDateStr: string, endDateStr: string): Promise<WeatherSegment[]> => {
     const today = new Date();
     const tripStart = parseISO(startDateStr);
     const tripEnd = parseISO(endDateStr);
@@ -178,7 +183,34 @@ const fetchHybridWeather = async (lat: number, long: number, startDateStr: strin
     return segments.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 };
 
-export function useTripWeather(tripId?: string) {
+export const prefetchTripWeather = async (queryClient: QueryClient, trip: Trip, language: string = 'en') => {
+    // 1. Prefetch Coordinates
+    const geoData = await queryClient.fetchQuery({
+        queryKey: ['coordinates', trip.location, language],
+        queryFn: () => fetchCoordinates(trip.location, language),
+        staleTime: Infinity
+    });
+
+    if (geoData) {
+        // 2. Prefetch Weather (The slow part)
+        // We use the trip dates directly, skipping the tripConfig fetch waterfall
+        queryClient.prefetchQuery({
+            queryKey: ['weather', geoData.latitude, geoData.longitude, trip.start_date, trip.end_date],
+            queryFn: () => fetchHybridWeather(geoData.latitude, geoData.longitude, trip.start_date, trip.end_date),
+            staleTime: 1000 * 60 * 60
+        });
+    }
+
+    // 3. Prefetch Trip Config (Parallel)
+    // This is for other pages like Info, etc.
+    queryClient.prefetchQuery({
+        queryKey: ['tripConfig', trip.id],
+        queryFn: () => fetchTripConfig(trip.id),
+        staleTime: 1000 * 60 * 30
+    });
+};
+
+export function useTripWeather(tripId?: string, language: string = 'en') {
     const { data: tripData, isLoading: isTripLoading, error: tripError } = useQuery({
         queryKey: ['tripConfig', tripId],
         queryFn: () => fetchTripConfig(tripId!),
@@ -187,8 +219,8 @@ export function useTripWeather(tripId?: string) {
     });
 
     const { data: geoData, isLoading: isGeoLoading, error: geoError } = useQuery({
-        queryKey: ['coordinates', tripData?.destination],
-        queryFn: () => fetchCoordinates(tripData!.destination),
+        queryKey: ['coordinates', tripData?.destination, language],
+        queryFn: () => fetchCoordinates(tripData!.destination, language),
         enabled: !!tripData?.destination,
         staleTime: Infinity,
     });
@@ -201,7 +233,10 @@ export function useTripWeather(tripId?: string) {
         isRefetching
     } = useQuery({
         queryKey: ['weather', geoData?.latitude, geoData?.longitude, tripData?.startDate, tripData?.endDate],
-        queryFn: () => fetchHybridWeather(geoData.latitude, geoData.longitude, tripData.startDate, tripData.endDate),
+        queryFn: (() => {
+            if (!geoData || !tripData) return Promise.resolve([]);
+            return fetchHybridWeather(geoData.latitude, geoData.longitude, tripData.startDate, tripData.endDate);
+        }) as () => Promise<WeatherSegment[]>,
         enabled: !!geoData?.latitude && !!tripData?.startDate && !!tripData?.endDate,
         staleTime: 1000 * 60 * 60, // 1 hour for hybrid data
     });
@@ -209,13 +244,21 @@ export function useTripWeather(tripId?: string) {
     const isLoading = isTripLoading || isGeoLoading || isWeatherLoading;
     const error = tripError || geoError || weatherError;
 
+    const useQueryClientRef = useQueryClient();
+
+    const handleRefresh = async () => {
+        await useQueryClientRef.invalidateQueries({ queryKey: ['tripConfig', tripId] });
+        await useQueryClientRef.invalidateQueries({ queryKey: ['coordinates'] });
+        await useQueryClientRef.invalidateQueries({ queryKey: ['weather'] });
+    };
+
     return {
-        weatherSegments, // Changed from weatherData (raw) to weatherSegments (processed)
+        weatherSegments,
         tripData,
         geoData,
         isLoading,
         error,
-        refetch,
-        isRefetching
+        refetch: handleRefresh,
+        isRefetching: isTripLoading || isGeoLoading || isRefetching
     };
 }

@@ -2,6 +2,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { fetchCoordinates } from '../hooks/useTripWeather';
 import { Plane, MapPin, ArrowRight, Calendar } from 'lucide-react';
 import { DayPicker } from 'react-day-picker';
 import { format } from 'date-fns';
@@ -13,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 export default function TripSetupPage() {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -93,6 +96,19 @@ export default function TripSetupPage() {
             }
 
             if (result.error) throw result.error;
+
+
+
+            // Prefetch coordinates for weather (Secretly download!)
+            try {
+                await queryClient.prefetchQuery({
+                    queryKey: ['coordinates', data.destination],
+                    queryFn: () => fetchCoordinates(data.destination),
+                    staleTime: Infinity
+                });
+            } catch (e) {
+                console.error('Prefetch failed', e);
+            }
 
             // Navigate home on success
             navigate('/');

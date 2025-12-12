@@ -84,7 +84,7 @@ export default function DayView({ tripId, date, onEdit, isReadOnly = false }: Da
                         {!isReadOnly && (
                             <div className="fixed bottom-40 right-8 z-30 pointer-events-none animate-bounce">
                                 <div className="relative">
-                                    <p className="absolute -top-8 -left-20 w-32 font-handwriting text-xl text-gray-500 rotate-[-12deg] text-center font-bold">
+                                    <p className="absolute -top-8 -left-20 w-32 text-xl text-gray-500 rotate-[-12deg] text-center font-bold">
                                         {t('itinerary.emptyStateHint', 'Start planning!')}
                                     </p>
                                     <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-400 transform rotate-12">

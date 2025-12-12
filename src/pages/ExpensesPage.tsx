@@ -125,15 +125,11 @@ const ExpensesPage = () => {
         <div className="p-6 space-y-8 pb-32 animate-fade-in">
             {/* Header & Converter */}
             <header className="space-y-6">
-                <div className="flex justify-between items-start">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-800 tracking-tight">{t('expenses.title', 'Shared Wallet')}</h1>
-                        <p className="text-gray-400 text-sm mt-1">{t('expenses.subtitle', 'Shared Wallet')}</p>
-                    </div>
-                </div>
+
 
                 {/* Always Visible Compact Converter */}
                 <div className="bg-white rounded-2xl p-3 shadow-sm border border-line space-y-2">
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider pl-1">{t('expenses.currencyConverter', 'Currency Converter')}</p>
                     <div className="flex items-center gap-2">
                         <div className="bg-date-selected-bg p-2 rounded-xl text-main-title flex-shrink-0">
                             <Calculator className="w-4 h-4" />
@@ -142,7 +138,7 @@ const ExpensesPage = () => {
                             type="number"
                             value={convAmount}
                             onChange={(e) => setConvAmount(e.target.value)}
-                            placeholder="Amount"
+                            placeholder="$"
                             className="flex-1 w-full min-w-[80px] p-2 bg-gray-50 rounded-lg font-bold text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-btn text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                         <span className="text-gray-300 text-xs">x</span>
@@ -224,7 +220,7 @@ const ExpensesPage = () => {
             </div>
 
             {/* Expenses List */}
-            <ExpenseList expenses={expenses} />
+            <ExpenseList expenses={expenses} companions={companions} />
 
             {/* FAB */}
             <button
