@@ -279,7 +279,16 @@ export const EditTripModal = ({ isOpen, onClose, trip }: EditTripModalProps) => 
                                 onClick={() => setShowPhotoInput(true)}
                             >
                                 {editingTrip.cover_image ? (
-                                    <img src={editingTrip.cover_image} alt="Preview" className="w-full h-full object-cover" />
+                                    <img
+                                        src={editingTrip.cover_image}
+                                        alt="Preview"
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            // Fallback on error (e.g. broken link)
+                                            e.currentTarget.src = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=2000&q=80'; // Default Travel Image
+                                            toast.error(t('trip.imageLoadError', '圖片無法讀取 (已顯示預設圖)'));
+                                        }}
+                                    />
                                 ) : (
                                     <div className="flex items-center justify-center h-full text-gray-400">
                                         <ImageIcon className="w-8 h-8" />
@@ -300,9 +309,37 @@ export const EditTripModal = ({ isOpen, onClose, trip }: EditTripModalProps) => 
                                     placeholder="https://..."
                                     className="flex-1 px-4 py-3 rounded-xl bg-white border border-[#e8e3de] focus:outline-none focus:ring-2 focus:ring-[#9B8D74] transition-all font-medium text-[#342b14] text-sm"
                                     autoFocus
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            // Trigger validation on Enter
+                                            const url = editingTrip.cover_image;
+                                            if (url && url.includes('drive.google.com') && !url.includes('export=view')) {
+                                                toast.error(t('trip.googleDriveWarning', 'Google Drive 連結必須使用 "Direct Link" 格式 (export=view)'));
+                                                // Allow them to proceed if they insist? Or create strict block?
+                                                // User wants a check/message.
+                                            }
+                                            setShowPhotoInput(false);
+                                        }
+                                    }}
                                 />
                                 <button
-                                    onClick={() => setShowPhotoInput(false)}
+                                    onClick={() => {
+                                        const url = editingTrip.cover_image;
+                                        if (url) {
+                                            // 1. Google Drive Warning
+                                            if (url.includes('drive.google.com') && !url.includes('export=view')) {
+                                                toast.error(t('trip.googleDriveWarning', 'Google Drive 連結必須使用 "Direct Link" 格式，否則無法顯示'));
+                                                // We don't block, just warn, because user might know what they are doing or want to try
+                                            }
+
+                                            // 2. Simple format check (optional warning)
+                                            // const validExts = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+                                            // if (!validExts.some(ext => url.toLowerCase().includes(ext)) && !url.includes('googleusercontent')) {
+                                            //    toast.warning(t('trip.imageFormatWarning', '網址似乎不是圖片檔 (.jpg/.png)，可能會無法顯示'));
+                                            // }
+                                        }
+                                        setShowPhotoInput(false);
+                                    }}
                                     className="p-3 bg-gray-100 rounded-xl hover:bg-gray-200"
                                 >
                                     <Check className="w-5 h-5 text-gray-600" />
