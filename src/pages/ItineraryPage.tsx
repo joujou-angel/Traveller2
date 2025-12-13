@@ -5,6 +5,7 @@ import { Loader2, Plus } from 'lucide-react';
 import DayView from '../features/itinerary/components/DayView';
 import ItineraryForm from '../features/itinerary/components/ItineraryForm';
 import TripMap from '../features/itinerary/components/TripMap';
+import ActionMenu from '../features/itinerary/components/ActionMenu';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -204,11 +205,16 @@ export default function ItineraryPage() {
                 </div>
 
                 {/* Export Button */}
-                {/* Export/Import Menu Temporarily Hidden */}
-                {/* 
-                   <ActionMenu /> code was here. 
-                   Restoring requires uncommenting valid JSX or reverting.
-                */}
+                {/* Export/Import Menu */}
+                {tripInfo && (
+                    <ActionMenu
+                        tripId={tripId!}
+                        tripName={tripInfo.title || 'My Trip'}
+                        tripDates={days}
+                        startDate={tripInfo.startDate}
+                        onImportSuccess={() => queryClient.invalidateQueries({ queryKey: ['itineraries', tripId] })}
+                    />
+                )}
             </div>
 
             {/* Content Area */}

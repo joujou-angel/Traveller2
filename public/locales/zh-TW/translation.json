@@ -130,7 +130,13 @@
         "googleMapLink": "Google Maps 連結",
         "googleMapPlaceholder": "(自動擷取)",
         "notesPlaceholder": "想吃什麼？要注意什麼？",
-        "emptyStateHint": "開始規劃！"
+        "emptyStateHint": "開始規劃！",
+        "exportTemplate": "匯出行程樣板 (JSON)",
+        "importItinerary": "匯入 AI 行程 (JSON)",
+        "exportSuccess": "樣板已下載！",
+        "importing": "匯入行程中...",
+        "importSuccess": "行程匯入成功！",
+        "importError": "匯入失敗"
     },
     "categories": {
         "activity": "景點",

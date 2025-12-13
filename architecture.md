@@ -97,18 +97,20 @@ src/
 | `payer` | `text` | 付款人。 |
 | `split_details` | `jsonb` | 分帳細節 `{ "Alice": 333 }`。 |
 
-### 2.4 `trip_memories` (微日記) [Reserved for Future]
-用於儲存使用者的私有回憶。設定 `ON DELETE CASCADE`。
+### 2.4 `trip_memories` (微日記) [Implemented]
+用於儲存 使用者的私有回憶。設定 `ON DELETE CASCADE`。
 
 | 欄位名稱 (Column) | 資料型別 (Type) | 說明 (Description) |
 | :--- | :--- | :--- |
 | `id` | `uuid` | Primary Key |
-| `trip_item_id` | `uuid` | FK (Trip Items) - 掛載於特定行程點 |
+| `trip_item_id` | `bigint` | FK (Itineraries) - 掛載於特定行程點 |
 | `user_id` | `uuid` | FK (Users) - 撰寫者 |
 | `content` | `text` | 日記內容 (限制 500字) |
-| `mood_emoji` | `text` | 單個 Emoji (如 😎) |
+| `mood_emoji` | `text` | Mood ID (e.g. 'awe', 'discovery') |
 | `external_link` | `text` | 外部相簿連結 (No Photo Policy) |
 | `is_private` | `boolean` | Default: `true` |
+| `created_at` | `timestamptz` | 建立時間 |
+| `updated_at` | `timestamptz` | 更新時間 |
 
 ---
 

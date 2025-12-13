@@ -32,7 +32,7 @@ export const MoodIcon = ({ mood, size = 24, className, ...props }: MoodIconProps
         case 'awe':
             return (
                 <svg {...commonProps}>
-                    <circle cx="12" cy="12" r="10" fill="#EDE7F6" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.2" />
+                    <circle cx="12" cy="12" r="10" fill="#EDE7F6" />
                     {/* Radiant lines (Impact) */}
                     <path d="M12 2V4M12 20V22M4.93 4.93L6.34 6.34M17.66 17.66L19.07 19.07M2 12H4M20 12H22M4.93 19.07L6.34 17.66M17.66 6.34L19.07 4.93" stroke="#673AB7" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
                     {/* Face */}
@@ -46,7 +46,7 @@ export const MoodIcon = ({ mood, size = 24, className, ...props }: MoodIconProps
         case 'discovery':
             return (
                 <svg {...commonProps}>
-                    <circle cx="12" cy="12" r="10" fill="#FFF8E1" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.2" />
+                    <circle cx="12" cy="12" r="10" fill="#FFF8E1" />
                     {/* Star Eyes */}
                     <path d="M9 9L9.5 10.5L11 11L9.5 11.5L9 13L8.5 11.5L7 11L8.5 10.5L9 9Z" fill="#FFC107" />
                     <path d="M15 9L15.5 10.5L17 11L15.5 11.5L15 13L14.5 11.5L13 11L14.5 10.5L15 9Z" fill="#FFC107" />
@@ -61,7 +61,7 @@ export const MoodIcon = ({ mood, size = 24, className, ...props }: MoodIconProps
         case 'delicious':
             return (
                 <svg {...commonProps}>
-                    <circle cx="12" cy="12" r="10" fill="#FBE9E7" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.2" />
+                    <circle cx="12" cy="12" r="10" fill="#FBE9E7" />
                     {/* Happy Eyes */}
                     <path d="M7 10C7 10 8 9 10 9C12 9 12 10 12 10" stroke="#E64A19" strokeWidth="2" strokeLinecap="round" />
                     <path d="M12 10C12 10 13 9 15 9C17 9 17 10 17 10" stroke="#E64A19" strokeWidth="2" strokeLinecap="round" />
@@ -77,7 +77,7 @@ export const MoodIcon = ({ mood, size = 24, className, ...props }: MoodIconProps
         case 'exhausted':
             return (
                 <svg {...commonProps}>
-                    <circle cx="12" cy="12" r="10" fill="#ECEFF1" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.2" />
+                    <circle cx="12" cy="12" r="10" fill="#ECEFF1" />
                     {/* Drooping Eyes */}
                     <path d="M7 11L9 12L7 13" stroke="#455A64" strokeWidth="2" strokeLinecap="round" />
                     <path d="M17 11L15 12L17 13" stroke="#455A64" strokeWidth="2" strokeLinecap="round" />
@@ -92,7 +92,7 @@ export const MoodIcon = ({ mood, size = 24, className, ...props }: MoodIconProps
         case 'crowded':
             return (
                 <svg {...commonProps}>
-                    <circle cx="12" cy="12" r="10" fill="#EFEBE9" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.2" />
+                    <circle cx="12" cy="12" r="10" fill="#EFEBE9" />
                     {/* Squeezing Hands/Blocks using path */}
                     <rect x="2" y="6" width="4" height="12" rx="1" fill="#8D6E63" opacity="0.2" />
                     <rect x="18" y="6" width="4" height="12" rx="1" fill="#8D6E63" opacity="0.2" />
@@ -108,7 +108,7 @@ export const MoodIcon = ({ mood, size = 24, className, ...props }: MoodIconProps
         case 'ripoff':
             return (
                 <svg {...commonProps}>
-                    <circle cx="12" cy="12" r="10" fill="#FFEBEE" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.2" />
+                    <circle cx="12" cy="12" r="10" fill="#FFEBEE" />
                     {/* Face */}
                     <path d="M9 10L8 11L9 12" stroke="#D32F2F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /> {/* Wincing Eye Left */}
                     <path d="M15 10L16 11L15 12" stroke="#D32F2F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /> {/* Wincing Eye Right */}
