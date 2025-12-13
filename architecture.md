@@ -70,6 +70,7 @@ src/
 | `companions` | `jsonb` | 旅伴陣列，例：`["Alice", "Bob"]` |
 | `flight_info` | `jsonb` | 航班資訊物件。 |
 | `hotel_info` | `jsonb` | 住宿資訊。 |
+> **Hardening**: `trip_id` 設有 **UNIQUE Constraint**，確保每個行程只能有一份設定檔，防止重複資料導致的 UI 崩潰。
 
 ### 2.2 `itineraries` (行程表)
 存儲每日的具體活動。
@@ -147,6 +148,7 @@ src/
     *   **Owner**：完全控制 (Edit/Delete)。
     *   **Shared Member**：協作記帳，唯讀行程，可主動退出 (Leave Trip)。
 *   **旅程共享**：透過連結邀請加入，自動同步 `companions` 名單。
+*   **Robust Data Sync**: `trip_config.companions` 作為顯示層的 Source of Truth，讀寫時自動與 `trip_members` 及 Owner 資料同步，確保名單不遺失。
 
 ### 4.2 行程管理 (Itinerary)
 *   **Smart Link Parsing**：
@@ -179,6 +181,13 @@ src/
     *   `persistQueryClient` 自動將行程、天氣、記帳資料快取至 localStorage。
     *   斷網時可瀏覽所有已讀資料。
 *   **Offline Indicator**：斷網時頂部顯示「離線模式」提示橫幅。
+
+### 4.6 UI 韌性 (UI Resilience) [12/13 New]
+*   **Image Validation**: 
+    *   自動偵測並警告無效的 Google Drive 預覽連結 (Viewer Link)。
+    *   **Auto-Fallback**: 圖片讀取失敗 (403/404) 時自動顯示質感預設圖，避免破圖影響體驗。
+*   **Database Hardening**:
+    *   全域資料庫約束 (Unique Constraint) 防止並發寫入導致的資料重複。
 
 ---
 
