@@ -194,37 +194,84 @@ const ExpensesPage = () => {
                 </div>
                 <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-white/40 to-transparent rounded-full -mr-12 -mt-12 pointer-events-none blur-2xl" />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {companions.length > 0 ? companions.map(person => {
-                        const personBalances = balances[person] || {};
-                        const currencies = Object.keys(personBalances).filter(c => Math.abs(personBalances[c]) > 1);
+                    {(() => {
+                        // Smart Rounding Logic: Ensure total sum is 0 for integers
+                        // 1. Group by Currency
+                        const balancesByCurr: { [curr: string]: { person: string; amount: number }[] } = {};
+                        companions.forEach(p => {
+                            const pBals = balances[p] || {};
+                            Object.entries(pBals).forEach(([curr, amt]) => {
+                                if (Math.abs(amt) > 0.01) { // Filter near-zero
+                                    if (!balancesByCurr[curr]) balancesByCurr[curr] = [];
+                                    balancesByCurr[curr].push({ person: p, amount: amt });
+                                }
+                            });
+                        });
 
-                        return (
-                            <div key={person} className="bg-white/60 rounded-2xl p-3 backdrop-blur-sm border border-white/50 shadow-sm">
-                                <p className="text-xs text-gray-500 font-bold uppercase mb-2">{person}</p>
-                                {currencies.length > 0 ? (
-                                    currencies.map(curr => {
-                                        const bal = Math.round(personBalances[curr]);
-                                        const isOwed = bal > 0;
-                                        const isDebt = bal < 0;
-                                        return (
-                                            <div key={curr} className="flex justify-between items-center mb-1 last:mb-0">
-                                                <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{curr}</span>
-                                                <div className="text-right">
-                                                    <span className={`text-sm font-bold ${isOwed ? 'text-positive' : isDebt ? 'text-negative' : 'text-gray-400'}`}>
-                                                        {bal > 0 ? '+' : ''}{bal.toLocaleString()}
-                                                    </span>
+                        // 2. Calculate rounded values and fix errors per currency
+                        const finalDisplay: { [person: string]: { [curr: string]: number } } = {};
+
+                        Object.keys(balancesByCurr).forEach(curr => {
+                            const entries = balancesByCurr[curr];
+                            let currentSum = 0;
+
+                            // First pass: Round normally
+                            const roundedEntries = entries.map(e => {
+                                const rounded = Math.round(e.amount);
+                                currentSum += rounded;
+                                return { ...e, rounded };
+                            });
+
+                            // If sum != 0, adjust the largest absolute value to absorb the diff
+                            if (currentSum !== 0) {
+                                roundedEntries.sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
+                                roundedEntries[0].rounded -= currentSum;
+                            }
+
+                            // Populate display dict
+                            roundedEntries.forEach(e => {
+                                if (!finalDisplay[e.person]) finalDisplay[e.person] = {};
+                                finalDisplay[e.person][curr] = e.rounded;
+                            });
+                        });
+
+                        // 3. Render
+                        if (companions.length === 0) {
+                            return <p className="text-gray-500 text-sm col-span-2">{t('expenses.noCompanions', 'No companions set. Add them in Info page.')}</p>;
+                        }
+
+                        return companions.map(person => {
+                            const displayedBals = finalDisplay[person] || {};
+                            const currencies = Object.keys(displayedBals);
+
+                            return (
+                                <div key={person} className="bg-white/60 rounded-2xl p-3 backdrop-blur-sm border border-white/50 shadow-sm">
+                                    <p className="text-xs text-gray-500 font-bold uppercase mb-2">{person}</p>
+                                    {currencies.length > 0 ? (
+                                        currencies.map(curr => {
+                                            const bal = displayedBals[curr];
+                                            const isOwed = bal > 0;
+                                            const isDebt = bal < 0;
+                                            if (bal === 0) return null; // Hide exact zero after rounding
+
+                                            return (
+                                                <div key={curr} className="flex justify-between items-center mb-1 last:mb-0">
+                                                    <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{curr}</span>
+                                                    <div className="text-right">
+                                                        <span className={`text-sm font-bold ${isOwed ? 'text-positive' : isDebt ? 'text-negative' : 'text-gray-400'}`}>
+                                                            {bal > 0 ? '+' : ''}{bal.toLocaleString()}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        )
-                                    })
-                                ) : (
-                                    <p className="text-xs text-gray-400 italic">{t('expenses.settled', 'Settled')}</p>
-                                )}
-                            </div>
-                        );
-                    }) : (
-                        <p className="text-gray-500 text-sm col-span-2">{t('expenses.noCompanions', 'No companions set. Add them in Info page.')}</p>
-                    )}
+                                            )
+                                        })
+                                    ) : (
+                                        <p className="text-xs text-gray-400 italic">{t('expenses.settled', 'Settled')}</p>
+                                    )}
+                                </div>
+                            );
+                        });
+                    })()}
                 </div>
             </div>
 
