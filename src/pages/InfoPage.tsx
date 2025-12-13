@@ -154,10 +154,11 @@ const InfoPage = () => {
                 .from('trip_config')
                 .update({
                     flight_info: {
-                        destination,
-                        startDate,
-                        endDate,
-                        flights
+                        ...tripConfig?.flight_info, // FAIL-SAFE: Merge with existing data
+                        destination: destination || tripConfig?.flight_info?.destination, // Prefer state, fallback to existing
+                        startDate: startDate || tripConfig?.flight_info?.startDate,
+                        endDate: endDate || tripConfig?.flight_info?.endDate,
+                        flights: flights.length > 0 ? flights : tripConfig?.flight_info?.flights || []
                     },
                     hotel_info: hotels,
                     updated_at: new Date().toISOString()

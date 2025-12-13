@@ -1,7 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { Loader2, Plus, Wallet, Calculator } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
 import type { Expense } from '../features/expenses/types';
@@ -10,13 +10,14 @@ import { AddExpenseModal } from '../features/expenses/components/AddExpenseModal
 import { useTranslation } from 'react-i18next';
 
 type TripConfig = {
+    id: number;
     companions: string[];
 };
 
 const fetchTripConfig = async (tripId: string): Promise<TripConfig | null> => {
     const { data, error } = await supabase
         .from('trip_config')
-        .select('companions')
+        .select('id, companions')
         .eq('trip_id', tripId)
         .single();
     if (error) return null;
@@ -42,6 +43,7 @@ const ExpensesPage = () => {
     const { t } = useTranslation();
     const { tripId } = useParams();
     const { user } = useAuth();
+    const queryClient = useQueryClient();
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // Currency Converter State (Always Visible)
@@ -74,6 +76,30 @@ const ExpensesPage = () => {
         const ownerName = user.user_metadata?.name || user.email?.split('@')[0] || 'Owner';
         companions = [ownerName];
     }
+
+    // --- Self-Healing: Sync Current User to Companions ---
+    const { mutate: updateCompanions } = useMutation({
+        mutationFn: async (newCompanions: string[]) => {
+            if (!tripConfig?.id) return;
+            await supabase.from('trip_config').update({ companions: newCompanions }).eq('id', tripConfig.id);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['tripConfig', tripId] });
+        }
+    });
+
+    useEffect(() => {
+        if (user && companions.length > 0 && tripId) {
+            const userName = user.user_metadata?.name || user.email?.split('@')[0] || 'Friend';
+            const isListed = companions.some(c => c.toLowerCase() === userName.toLowerCase());
+
+            if (!isListed && tripConfig?.id) {
+                // Auto-fix: Add user to companions
+                const newCompanions = [...companions, userName];
+                updateCompanions(newCompanions);
+            }
+        }
+    }, [user, companions, tripId, tripConfig?.id, updateCompanions]);
 
     // --- Calculation Logic (Multi-Currency) ---
     const calculateStats = () => {

@@ -148,6 +148,42 @@ const TripListPage = () => {
                                 Dev: Reset
                             </button>
                         )}
+                        {/* Emergency Restore Button for Trip 29 */}
+                        <button
+                            onClick={async () => {
+                                const toastId = toast.loading('Restoring Trip 29...');
+                                try {
+                                    // 1. Unarchive
+                                    const { error: updateError } = await supabase.from('trips').update({ status: 'active' }).eq('id', 29);
+                                    if (updateError) throw updateError;
+
+                                    // 2. Restore Dates from Itinerary if missing
+                                    const { data: config } = await supabase.from('trip_config').select('*').eq('trip_id', 29).single();
+                                    if (config && (!config.flight_info || !config.flight_info.startDate)) {
+                                        const { data: itineraries } = await supabase.from('itineraries').select('date').eq('trip_id', 29).order('date', { ascending: true });
+                                        if (itineraries && itineraries.length > 0) {
+                                            const firstDate = itineraries[0].date;
+                                            const lastDate = itineraries[itineraries.length - 1].date;
+
+                                            await supabase.from('trip_config').update({
+                                                flight_info: { ...(config.flight_info || {}), startDate: firstDate, endDate: lastDate }
+                                            }).eq('id', config.id);
+                                            await supabase.from('trips').update({ start_date: firstDate, end_date: lastDate }).eq('id', 29);
+                                            toast.success(`Restored dates: ${firstDate} - ${lastDate}`);
+                                        }
+                                    }
+
+                                    toast.success('Trip 29 Unarchived & Processed!', { id: toastId });
+                                    queryClient.invalidateQueries({ queryKey: ['trips'] });
+                                } catch (e: any) {
+                                    console.error(e);
+                                    toast.error('Restore Failed: ' + e.message, { id: toastId });
+                                }
+                            }}
+                            className="text-[10px] bg-red-100 text-red-500 px-2 py-1 rounded hover:bg-red-200 font-bold"
+                        >
+                            FIX TRIP 29
+                        </button>
                         <LanguageSwitcher />
                         <button
                             onClick={signOut}
