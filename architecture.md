@@ -167,7 +167,9 @@ src/
     *   多幣別總額統計 (Total Spent)。
 *   **智慧分帳**：
     *   支援「全體均分」或「指定人均分」。
+    *   支援「全體均分」或「指定人均分」。
     *   視覺化債務關係 (Net Balances)。
+    *   **Penny Perfect Rounding**: 顯示層自動校正四捨五入誤差 (e.g. +1/-1)，確保各幣別淨餘額總和恆為 0。
 
 ### 4.4 天氣預報 (Weather)
 *   **Hybrid Strategy**：
