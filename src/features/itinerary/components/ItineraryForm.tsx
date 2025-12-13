@@ -234,12 +234,10 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
                             initialValue={watch('location')}
                             onChange={(val) => {
                                 setValue('location', val);
-                                // If user clears the location name, we must clear the map data too
-                                if (!val) {
-                                    setValue('lat', null);
-                                    setValue('lng', null);
-                                    setValue('google_map_link', '');
-                                }
+                                // Any manual typing invalidates the previously selected coordinates
+                                setValue('lat', null);
+                                setValue('lng', null);
+                                setValue('google_map_link', '');
                             }}
                             onSelect={(loc) => {
                                 setValue('location', loc.name);
