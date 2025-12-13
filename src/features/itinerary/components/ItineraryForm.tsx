@@ -234,6 +234,12 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
                             initialValue={watch('location')}
                             onChange={(val) => {
                                 setValue('location', val);
+                                // If user clears the location name, we must clear the map data too
+                                if (!val) {
+                                    setValue('lat', null);
+                                    setValue('lng', null);
+                                    setValue('google_map_link', '');
+                                }
                             }}
                             onSelect={(loc) => {
                                 setValue('location', loc.name);
@@ -255,7 +261,11 @@ export default function ItineraryForm({ initialData, onSubmit, onCancel }: Itine
                                 {...register('google_map_link', {
                                     onChange: async (e) => {
                                         const url = e.target.value;
-                                        if (!url) return;
+                                        if (!url) {
+                                            setValue('lat', null);
+                                            setValue('lng', null);
+                                            return;
+                                        }
 
                                         const parseUrl = (targetUrl: string) => {
                                             // 1. Extract Place Name
