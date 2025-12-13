@@ -10,17 +10,33 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
 import { useTranslation } from 'react-i18next';
 
-const fetchTripConfig = async (tripId: string) => {
-    const { data, error } = await supabase
+// New: Fetch trip core details directly to ensure owner check works even if config is missing
+const fetchTripDetails = async (tripId: string) => {
+    // 1. Fetch Trip Core (Owner + Dates)
+    const { data: trip, error: tripError } = await supabase
+        .from('trips')
+        .select('*')
+        .eq('id', tripId)
+        .single();
+
+    if (tripError) throw tripError;
+
+    // 2. Fetch Config (Optional dates override)
+    const { data: config } = await supabase
         .from('trip_config')
-        .select('flight_info, trips(user_id)') // Fetch trip owner via join
+        .select('*')
         .eq('trip_id', tripId)
         .single();
 
-    if (error) throw error;
-    if (!data?.flight_info?.startDate) return null;
-    const tripsData = data.trips as any; // Cast to bypass array check
-    return { ...data.flight_info, ownerId: tripsData?.user_id || (Array.isArray(tripsData) ? tripsData[0]?.user_id : null) };
+    // Merge: Prefer config dates if available, otherwise trip dates
+    return {
+        ...trip,
+        // Config dates take precedence if they exist
+        startDate: config?.flight_info?.startDate || trip.start_date,
+        endDate: config?.flight_info?.endDate || trip.end_date,
+        // Config might be null
+        configId: config?.id
+    };
 };
 
 export default function ItineraryPage() {
@@ -35,28 +51,30 @@ export default function ItineraryPage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<any>(null); // If null, it's Add mode
 
-    // 1. Fetch Trip Dates
+    // 1. Fetch Trip Data (Robust)
     const { data: tripInfo, isLoading, error } = useQuery({
-        queryKey: ['tripConfig', tripId],
-        queryFn: () => fetchTripConfig(tripId!),
+        queryKey: ['tripDetails', tripId],
+        queryFn: () => fetchTripDetails(tripId!),
         enabled: !!tripId,
         retry: false
     });
 
-    const isOwner = tripInfo?.ownerId === user?.id; // Check ownership
+    // Valid Ownership Check (Source of Truth: trips table)
+    const isOwner = tripInfo?.user_id === user?.id;
 
     // 2. Calculate Day Tabs
     const days = useMemo(() => {
-        if (!tripInfo) return [];
+        if (!tripInfo || !tripInfo.startDate) return [];
 
         const start = new Date(tripInfo.startDate);
-        const end = new Date(tripInfo.endDate);
+        const end = tripInfo.endDate ? new Date(tripInfo.endDate) : new Date(start);
         const list = [];
 
         // Safety check loop limit
         let current = new Date(start);
         let count = 1;
-        while (current <= end && count <= 30) {
+        // Limit to 30 days max for UI safety
+        while (current <= end && count <= 60) {
             list.push({
                 label: t('itinerary.day', { count }),
                 date: current.toISOString().split('T')[0], // YYYY-MM-DD
@@ -143,6 +161,7 @@ export default function ItineraryPage() {
             if (activeTab) {
                 activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
             }
+            // Sync with scroll?
         }
     }, [activeDayIndex]);
 
@@ -155,19 +174,22 @@ export default function ItineraryPage() {
         );
     }
 
-    if (error || days.length === 0) {
+    if (error || !tripInfo?.startDate) {
         return (
             <div className="p-8 text-center flex flex-col items-center justify-center h-full">
-                <h2 className="text-xl font-bold text-gray-700 mb-2">{t('itinerary.noTripConfig', 'No trip configuration yet')}</h2>
+                <h2 className="text-xl font-bold text-gray-700 mb-2">{t('itinerary.noTripConfig', 'No trip dates set')}</h2>
                 {isOwner ? (
-                    <button
-                        onClick={() => navigate(`/trips/${tripId}/setup`)}
-                        className="bg-gray-900 text-white px-6 py-2 rounded-xl hover:bg-gray-800 transition-colors"
-                    >
-                        {t('common.goToSetup', 'Go to Setup')}
-                    </button>
+                    <div className="space-y-4">
+                        <p className="text-gray-500 text-sm">Please set up the trip dates first.</p>
+                        <button
+                            onClick={() => navigate(`/trips/${tripId}/setup`)}
+                            className="bg-gray-900 text-white px-6 py-2 rounded-xl hover:bg-gray-800 transition-colors"
+                        >
+                            {t('common.goToSetup', 'Go to Setup')}
+                        </button>
+                    </div>
                 ) : (
-                    <p className="text-gray-400 text-sm">{t('itinerary.waitCoordinates', 'Please wait for the organizer to set dates and location')}</p>
+                    <p className="text-gray-400 text-sm">{t('itinerary.waitCoordinates', 'Please wait for the organizer to set dates')}</p>
                 )}
             </div>
         );
@@ -204,17 +226,14 @@ export default function ItineraryPage() {
                     ))}
                 </div>
 
-                {/* Export Button */}
                 {/* Export/Import Menu */}
-                {tripInfo && (
-                    <ActionMenu
-                        tripId={tripId!}
-                        tripName={tripInfo.title || 'My Trip'}
-                        tripDates={days}
-                        startDate={tripInfo.startDate}
-                        onImportSuccess={() => queryClient.invalidateQueries({ queryKey: ['itineraries', tripId] })}
-                    />
-                )}
+                <ActionMenu
+                    tripId={tripId!}
+                    tripName={tripInfo.name || 'My Trip'}
+                    tripDates={days}
+                    startDate={tripInfo.startDate}
+                    onImportSuccess={() => queryClient.invalidateQueries({ queryKey: ['itineraries', tripId] })}
+                />
             </div>
 
             {/* Content Area */}
@@ -228,7 +247,7 @@ export default function ItineraryPage() {
 
                 <DayView
                     tripId={tripId!} // Pass tripId
-                    date={days[activeDayIndex].date}
+                    date={days[activeDayIndex]?.date || tripInfo.startDate}
                     onEdit={handleEdit}
                     isReadOnly={!isOwner}
                     items={itineraryItems || []}
