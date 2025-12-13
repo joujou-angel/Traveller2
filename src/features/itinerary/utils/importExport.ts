@@ -6,7 +6,6 @@ export interface ImportItem {
     location: string;
     category: 'transport' | 'food' | 'stay' | 'activity';
     notes?: string;
-    cost?: number;
     link?: string;
 }
 
@@ -34,7 +33,6 @@ export const exportTripTemplate = (tripName: string, tripDates: { date: string; 
                     location: "Example Location",
                     category: "activity",
                     notes: "Replace with your plan",
-                    cost: 0,
                     link: ""
                 }
             ]
@@ -88,7 +86,6 @@ export const importItinerary = async (tripId: string, startDate: string, file: F
                                 location: activity.location,
                                 category: activity.category || 'activity',
                                 notes: activity.notes || '',
-                                cost: activity.cost || 0,
                                 google_map_link: activity.link || '',
                                 is_booked: false
                             });
