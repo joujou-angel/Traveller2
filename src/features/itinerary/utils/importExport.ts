@@ -32,7 +32,7 @@ export const exportTripTemplate = (tripName: string, tripDates: { date: string; 
                     time: "10:00",
                     location: "Example Location",
                     category: "activity",
-                    notes: "Replace with your plan",
+                    notes: "Valid categories: transport, food, stay, activity",
                     link: ""
                 }
             ]
@@ -67,6 +67,7 @@ export const importItinerary = async (tripId: string, startDate: string, file: F
 
                 const tripStart = new Date(startDate);
                 const itemsToInsert: any[] = [];
+                const validCategories = ['transport', 'food', 'stay', 'activity'];
 
                 json.days.forEach((day) => {
                     // Calculate date based on day_number if date is missing or to align with current trip start
@@ -75,19 +76,25 @@ export const importItinerary = async (tripId: string, startDate: string, file: F
                     const dateStr = targetDate.toISOString().split('T')[0];
 
                     if (day.activities && Array.isArray(day.activities)) {
-                        day.activities.forEach((activity) => {
+                        day.activities.forEach((activity, idx) => {
                             // Basic validation
                             if (!activity.location) return;
+
+                            // Strict Category Validation
+                            let finalCategory = activity.category;
+                            if (!validCategories.includes(finalCategory)) {
+                                console.warn(`Invalid category '${finalCategory}' found at Day ${day.day_number} Item ${idx}. Defaulting to 'activity'.`);
+                                finalCategory = 'activity'; // Fallback for safety, but no "magic" mapping
+                            }
 
                             itemsToInsert.push({
                                 trip_id: tripId,
                                 date: dateStr,
                                 start_time: activity.time || "09:00",
                                 location: activity.location,
-                                category: activity.category || 'activity',
+                                category: finalCategory,
                                 notes: activity.notes || '',
-                                google_map_link: activity.link || '',
-                                is_booked: false
+                                google_map_link: activity.link || ''
                             });
                         });
                     }
