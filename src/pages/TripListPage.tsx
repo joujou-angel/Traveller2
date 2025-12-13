@@ -151,38 +151,77 @@ const TripListPage = () => {
                         {/* Emergency Restore Button for Trip 29 */}
                         <button
                             onClick={async () => {
-                                const toastId = toast.loading('Restoring Trip 29...');
+                                const toastId = toast.loading('Running Deep Discovery...');
                                 try {
-                                    // 1. Unarchive
-                                    const { error: updateError } = await supabase.from('trips').update({ status: 'active' }).eq('id', 29);
-                                    if (updateError) throw updateError;
+                                    // 1. Unarchive (Just in case)
+                                    await supabase.from('trips').update({ status: 'active' }).eq('id', 29);
 
-                                    // 2. Restore Dates from Itinerary if missing
+                                    // 2. Fetch Deep Data
                                     const { data: config } = await supabase.from('trip_config').select('*').eq('trip_id', 29).single();
-                                    if (config && (!config.flight_info || !config.flight_info.startDate)) {
-                                        const { data: itineraries } = await supabase.from('itineraries').select('date').eq('trip_id', 29).order('date', { ascending: true });
-                                        if (itineraries && itineraries.length > 0) {
-                                            const firstDate = itineraries[0].date;
-                                            const lastDate = itineraries[itineraries.length - 1].date;
+                                    const { data: itineraries } = await supabase.from('itineraries').select('date').eq('trip_id', 29).order('date', { ascending: true });
+                                    const { data: expenses } = await supabase.from('expenses').select('payer, split_details').eq('trip_id', 29);
 
-                                            await supabase.from('trip_config').update({
-                                                flight_info: { ...(config.flight_info || {}), startDate: firstDate, endDate: lastDate }
-                                            }).eq('id', config.id);
-                                            await supabase.from('trips').update({ start_date: firstDate, end_date: lastDate }).eq('id', 29);
-                                            toast.success(`Restored dates: ${firstDate} - ${lastDate}`);
+                                    // 3. Recover Companions from Expenses
+                                    const recoveredCompanions = new Set<string>(config?.companions || []);
+                                    // Add Payers
+                                    expenses?.forEach(exp => {
+                                        if (exp.payer) recoveredCompanions.add(exp.payer);
+                                        if (exp.split_details) {
+                                            Object.keys(exp.split_details).forEach(k => recoveredCompanions.add(k));
                                         }
+                                    });
+                                    // Add Current User (Owner) name if possible
+                                    const ownerName = user?.user_metadata?.name || user?.email?.split('@')[0];
+                                    if (ownerName) recoveredCompanions.add(ownerName);
+
+                                    const finalCompanions = Array.from(recoveredCompanions);
+                                    console.log('Recovered Companions:', finalCompanions);
+
+                                    // Update Config with Recovered Companions
+                                    if (finalCompanions.length > (config?.companions?.length || 0)) {
+                                        await supabase.from('trip_config').update({ companions: finalCompanions }).eq('trip_id', 29);
+                                        toast.success(`Recovered ${finalCompanions.length} companions!`, { id: toastId });
                                     }
 
-                                    toast.success('Trip 29 Unarchived & Processed!', { id: toastId });
-                                    queryClient.invalidateQueries({ queryKey: ['trips'] });
+                                    // 4. Recover Dates from Itineraries
+                                    if (itineraries && itineraries.length > 0) {
+                                        const firstDate = itineraries[0].date;
+                                        const lastDate = itineraries[itineraries.length - 1].date;
+
+                                        console.log('Recovered Dates:', firstDate, lastDate);
+
+                                        // Force Update Dates in Config
+                                        await supabase.from('trip_config').update({
+                                            flight_info: {
+                                                ...(config?.flight_info || {}),
+                                                startDate: firstDate,
+                                                endDate: lastDate
+                                            }
+                                        }).eq('trip_id', 29);
+
+                                        // Force Update Dates in Trip
+                                        await supabase.from('trips').update({ start_date: firstDate, end_date: lastDate }).eq('id', 29);
+
+                                        toast.success(`Synced Layout: ${firstDate} -> ${lastDate}`, { id: toastId });
+                                    } else {
+                                        toast.error('No itineraries found to recover dates from.', { id: toastId });
+                                    }
+
+                                    // Complete
+                                    setTimeout(() => {
+                                        toast.success('Recovery Complete! Refreshing...', { id: toastId });
+                                        queryClient.invalidateQueries();
+                                        setTimeout(() => window.location.reload(), 1500);
+                                    }, 1000);
+
                                 } catch (e: any) {
                                     console.error(e);
-                                    toast.error('Restore Failed: ' + e.message, { id: toastId });
+                                    toast.error('Deep Recovery Failed: ' + e.message, { id: toastId });
                                 }
                             }}
-                            className="text-[10px] bg-red-100 text-red-500 px-2 py-1 rounded hover:bg-red-200 font-bold"
+                            className="text-[10px] bg-red-600 text-white px-3 py-2 rounded-full hover:bg-red-700 font-bold shadow-md animate-pulse"
                         >
-                            FIX TRIP 29
+                            DEEP RECOVERY 29
                         </button>
                         <LanguageSwitcher />
                         <button
